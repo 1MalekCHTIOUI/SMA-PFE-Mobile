@@ -1,9 +1,8 @@
 import { combineReducers } from 'redux';
 import { persistReducer } from 'redux-persist';
 // import storage from 'redux-persist/lib/storage';
-import {AsyncStorage} from 'react-native';
-// reducer import
-// import customizationReducer from './customizationReducer';
+import AsyncStorage from '@react-native-community/async-storage';
+
 import accountReducer from './accountReducer';
 // import socketReducer from './socketReducer';
 

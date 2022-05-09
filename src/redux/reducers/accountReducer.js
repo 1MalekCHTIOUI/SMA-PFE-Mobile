@@ -33,6 +33,9 @@ const accountReducer = (state = initialState, action) => {
         case LOGOUT: {
             const userId = action.payload;
             // socket.emit("logout", userId)
+            console.log('====================================');
+            console.log("logout");
+            console.log('====================================');
             return {
                 ...state,
                 isLoggedIn: false,
