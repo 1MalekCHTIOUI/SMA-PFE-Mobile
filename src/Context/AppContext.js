@@ -10,15 +10,12 @@ const ContextProvider = ({children}) => {
     const [rooms, setRooms] = useState([])
     const [currentChatUser, setCurrentChatUser] = useState(null)
     const [id, setId] = useState(null)
-
+    const [messages, setMessages] = useState([])
     const [currentChat, setCurrentChat] = useState(null)
     const [existInRoom, setExistInRoom] = useState(null)
     const account = useSelector(s => s.account)
-    useEffect(()=>{
-        currentChat && console.log(currentChat);
-    }, [currentChat])
     return (
-        <AppContext.Provider value={{ account, existInRoom, setExistInRoom, currentChatUser, setCurrentChatUser, currentChat, setCurrentChat, id, setId}}>
+        <AppContext.Provider value={{ messages, setMessages, account, existInRoom, setExistInRoom, currentChatUser, setCurrentChatUser, currentChat, setCurrentChat, id, setId}}>
             {children}
         </AppContext.Provider>
     )

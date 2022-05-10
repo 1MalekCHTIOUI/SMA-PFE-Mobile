@@ -2,7 +2,7 @@ import React, { useContext } from 'react';
 import {View, Text, StyleSheet} from 'react-native';
 import { AppContext } from '../../Context/AppContext';
 import {format} from 'timeago.js'
-const TextchatScreen = ({message, own}) => {
+const Message = ({message, own}) => {
 
     return (
         <View style={own ? styles.ownMessageContainer : styles.freindMessageContainer}>
@@ -16,8 +16,6 @@ const styles = StyleSheet.create({
     freindMessageContainer: {
         justifyContent: 'center',
         width:"40%",
-        height: '100%',
-        // minWidth:"fit-content",
         backgroundColor: 'rgba(0, 0, 0, 0.2)',
         padding: 9,
         margin: 3,
@@ -28,7 +26,6 @@ const styles = StyleSheet.create({
     ownMessageContainer: {
         justifyContent: 'center',
         width:"40%",
-        // minWidth:"fit-content",
         backgroundColor: 'rgba(144, 202, 249, 0.6)',
         padding: 9,
         margin: 3,
@@ -47,4 +44,4 @@ const styles = StyleSheet.create({
     }
 })
 
-export default TextchatScreen;
+export default Message;
