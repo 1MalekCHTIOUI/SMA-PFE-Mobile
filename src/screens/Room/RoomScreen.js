@@ -1,6 +1,6 @@
 import axios from 'axios';
 import React, { useContext, useEffect, useState } from 'react';
-import {View, Text,ScrollView,SafeAreaView, StyleSheet, FlatList} from 'react-native';
+import {View, Text,ScrollView,SafeAreaView, ActivityIndicator, StyleSheet, FlatList} from 'react-native';
 import User from '../../components/User';
 import config from '../../config';
 import { AppContext } from '../../Context/AppContext';
@@ -16,14 +16,31 @@ const Separator = () => {
       />
     );
 }
+
+
+  const FlatList_Header = () => {
+    return (
+      <View>
+
+        <Text> Sample FlatList Header </Text>
+
+      </View>
+    );
+  }
+
 const RoomScreen = ({setCurrentChat}) => {
     const [users, setUsers] = useState([])
-    const { account } = useContext(AppContext)
+    const [loading, setLoading] = useState(false)
+    const { account, onlineUsers } = useContext(AppContext)
+
     const getUsers = async () => {
         try {
+            setLoading(true)
             const res = await axios.get(config.API_SERVER + 'user/users')
             setUsers(res.data)
+            setLoading(false)
         } catch (error) {
+            setLoading(false)
             console.log(error);
         }
     }
@@ -31,18 +48,21 @@ const RoomScreen = ({setCurrentChat}) => {
     useEffect(()=>{
         getUsers()
     }, [])
-
-
-
+    const noUsers = () => {
+      return <View style={{marginLeft: 140, justifyContent: 'center'}}><Text style={{fontSize: 15, fontWeight: 'bold'}}>No online users</Text></View>
+    }
     return (
         <SafeAreaView style={styles.MainContainer}>
+            <Text style={styles.titleText}>ONLINE USERS: {users.filter(user => user.userId !== account?.user._id).length}</Text>
             <FlatList
-                data={users.filter(user => user._id !== account.user._id)}
+                data={users.filter(user => user.userId !== account?.user._id)}
                 onPress={() => userHasRoom(item)}
-                renderItem={({ item }) => <User user={item} />}
+                renderItem={({ item }) => loading===false ? <User user={item.userId} /> : <ActivityIndicator style={styles.loading} size="large" />}
                 keyExtractor={item => item.id}
                 ItemSeparatorComponent={Separator}
                 horizontal={true}
+                ListEmptyComponent={noUsers}
+                // ListHeaderComponent={FlatList_Header}
             />
         </SafeAreaView>
         
@@ -52,15 +72,24 @@ const RoomScreen = ({setCurrentChat}) => {
 const styles = StyleSheet.create({
     MainContainer: {
         flex: 1,
-        backgroundColor: 'rgba(0,0,0,0.1)',
-        borderRadius: 10
+        backgroundColor: 'orange',
+        borderRadius: 10,
+        flexDirection: 'column',
     }, 
     titleText: {
-        fontSize: 24,
+        fontSize: 15,
         fontWeight: 'bold',
-        textAlign: 'center',
-        padding: 12
+        padding: 10,
+        height: 40,
+        justifyContent: 'center',
+        marginBottom: 0,
+        color: 'white',
     },
+    loading: {
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginLeft: 180,
+    }
 
 })
 

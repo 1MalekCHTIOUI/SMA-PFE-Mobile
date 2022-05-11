@@ -10,7 +10,7 @@ import config from '../../config';
 import Icon from 'react-native-vector-icons'
 const MessageScreen = () => {
     const navigation = useNavigation()
-    const { currentChat,setCurrentChat, messages,setMessages, currentChatUser, account } = useContext(AppContext)
+    const { currentChat,setCurrentChat, messages, setMessages, messagesLoading, sendMessage, currentChatUser, account } = useContext(AppContext)
     const [newMessage, setNewMessage] = useState('')
     const [sendIsLoading, setSendIsLoading] = useState(false)
 
@@ -37,13 +37,14 @@ const MessageScreen = () => {
             text: newMessage,
             attachment: []
         }
-        
+        const receiverId = currentChat.members.find(m => m !== account.user._id)
         try {
             setSendIsLoading(true)
             const res = await axios.post(config.API_SERVER+"messages", message)
             setMessages([...messages, res.data])
             setNewMessage("")
             setSendIsLoading(false)
+            sendMessage(message.sender, receiverId, newMessage, currentChat.type)
         } catch (error) {
             setSendIsLoading(false)
             console.log(error);
@@ -52,10 +53,11 @@ const MessageScreen = () => {
 
     return (
         <View>
-            { currentChat && currentChat.type==='PRIVATE' && messages?.length === 0 && <Text variant="subtitle2">You no conversation with this user, start now!</Text> }
+            { currentChat && currentChat.type==='PRIVATE' && messagesLoading===false && messages?.length === 0 && <Text variant="subtitle2">You no conversation with this user, start now!</Text> }
             {
                 currentChat? 
                     <ScrollView style={styles.messageArea}>
+                        <ActivityIndicator size='large' animating={messagesLoading} />
                         {messages && messages.map((m, i) => (
                             <Message message={m} own={m.sender === account.user._id} type={currentChat.type} key={i} mk={i}/>
                         ))}
@@ -73,7 +75,7 @@ const MessageScreen = () => {
 const styles = StyleSheet.create({
     messageArea: {
         borderRadius: 10,
-        height: '100%',
+        height: '80%',
         padding: 8,
         backgroundColor: 'rgba(0,0,0,0.02)',
     }

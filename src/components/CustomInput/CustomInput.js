@@ -21,14 +21,11 @@ const styles = StyleSheet.create({
         background: 'white',
         width: '100%',
         boderColor: '#e8e8e8',
-        borderWidth: 0.5,
+        borderWidth: 0.6,
         borderRadius: 5,
         paddingHorizontal: 10,
         marginVertical: 5
     },
-    input: {
-
-    }
 
 })
 

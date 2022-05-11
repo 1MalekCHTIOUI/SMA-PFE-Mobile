@@ -14,6 +14,7 @@ import {
   SafeAreaView,
   StyleSheet,
   Text,
+  View
 } from 'react-native';
 import SigninScreen from './src/screens/Signin'
 import Dashboard from './src/screens/Dashboard'
