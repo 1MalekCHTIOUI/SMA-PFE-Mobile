@@ -1,14 +1,14 @@
 import axios from 'axios';
 import React, { useContext, useEffect, useState } from 'react';
-import {View,SafeAreaView, Image, Text, StyleSheet, ActivityIndicator} from 'react-native';
+import {View,ScrollView, Image, Text, StyleSheet, ActivityIndicator} from 'react-native';
 import { AppContext } from '../../Context/AppContext';
 ;
 const DashboardScreen = () => {
     const {onlineUsers} = useContext(AppContext)
     return (
-        <SafeAreaView style={styles.container}>
+        <ScrollView style={styles.container}>
             <View style={styles.card}>
-                <Text style={{color: 'white',marginRight: 105, fontFamily: 'sans-serif',}}>ONLINE USERS</Text>
+                <Text style={{color: 'white',marginRight: 105, fontFamily: 'Montserrat-Regular',}}>ONLINE USERS</Text>
                 <View
                     style={{
                     height: 100,
@@ -19,7 +19,7 @@ const DashboardScreen = () => {
                 <Text style={{color: 'white'}}>{onlineUsers?.length}</Text>
             </View>
             
-        </SafeAreaView>
+        </ScrollView>
     );
 }
 
@@ -28,7 +28,7 @@ const styles = StyleSheet.create({
 
         flex: 1,
         width: '100%',
-        backgroundColor: '#F5FBFF'
+        backgroundColor: 'white'
     },
     card: {
         flexDirection: 'row',

@@ -1,6 +1,6 @@
 import axios from 'axios';
 import React, { useContext, useEffect, useState } from 'react';
-import {View, Image, Text, StyleSheet, ScrollView, ActivityIndicator, SafeAreaView} from 'react-native';
+import {View, Image, Text, StyleSheet, ScrollView, ActivityIndicator, SafeAreaView, TouchableOpacity} from 'react-native';
 import { useSelector, useDispatch } from 'react-redux'
 import CustomButton from '../../components/CustomButton';
 import config from '../../config';
@@ -17,7 +17,7 @@ const ChatScreen = () => {
     const navigation = useNavigation()
 
 
-    const { id, setMessages, setMessagesLoading, setCurrentChat, currentChat, userHasRoom, existInRoom, account } = useContext(AppContext)
+    const { id, setMessages, setMessagesLoading, setCurrentChat, currentChat,arrivalMessage, userHasRoom, existInRoom, account } = useContext(AppContext)
 
     const dispatcher = useDispatch()
 
@@ -35,7 +35,9 @@ const ChatScreen = () => {
         }
         getRooms()
     }, [account])
-
+    useEffect(() =>{
+        getLastRoomMessage()
+    }, [arrivalMessage])
     useEffect(()=>{
         const createUser = async () => {
             if(existInRoom === false) {
@@ -86,7 +88,6 @@ const ChatScreen = () => {
     const [privateRooms, setPrivateRooms] = useState([])
     const [privateRoomsLoading, setPrivateRoomsLoading] = useState(false)
     const getPrivateRooms = () => {
-        console.log(privateRooms);
         rooms?.map(item => {
             if(item.type === 'PRIVATE') {
                 item.members.map(async m => {
@@ -142,25 +143,29 @@ const ChatScreen = () => {
             console.log(error);
         }
     }
-    const handleRoomClick = (user) => {
-        console.log(user);
-    }
+    // const handleRoomClick = (user) => {
+    //     console.log(user);
+    // }
     const PrivateRooms = () => {
         return privateRooms?.map(item => (
-            <Pressable style={styles.convContainer} key={item.user._id} onPress={() => userHasRoom(item.user)}>
-                <Image style={styles.convImage} source={require('../../../public/uploads/profilePictures/camp.png')} />
-                <SafeAreaView style={styles.convMiddleSection}>
-                    <Text style={{
-                        fontWeight: 'bold',
-                        fontSize: 15
-                    }}>{item.user.first_name} {item.user.last_name}</Text>
-                    <Text>{item.user._id === lastMessage.receiver && lastMessage.message?.text}</Text>
-                </SafeAreaView>
-                <SafeAreaView style={styles.convEndSection}>
-                    <Text >{format(lastMessage.message?.createdAt)}</Text>
-                    <Text style={styles.convMessageCount}>{item.user._id === unreadMessages.receiver ? unreadMessages.count: 0}</Text>
-                </SafeAreaView>
-            </Pressable>
+            <>
+                <View style={{width: '94%', alignSelf:'center', backgroundColor: 'rgba(0,0,0,0.2)', height: 2, marginTop: 5}}/>
+                <TouchableOpacity style={styles.convContainer} key={item.user._id} onPress={() => userHasRoom(item.user)}>
+                    <Image style={styles.convImage} resizeMode='contain' source={require('../../../public/uploads/profilePictures/camp.png')} />
+                    <SafeAreaView style={styles.convMiddleSection}>
+                        <Text style={{
+                            fontFamily: 'Montserrat-Bold',
+                            color: 'black',
+                            fontSize: 15
+                        }}>{item.user.first_name} {item.user.last_name}</Text>
+                        <Text style={{ fontFamily: 'Montserrat-Medium', paddingTop: 5}}>{item.user._id === lastMessage.receiver && lastMessage.message?.text}</Text>
+                    </SafeAreaView>
+                    <SafeAreaView style={styles.convEndSection}>
+                        <Text style={{ fontFamily: 'Montserrat-Regular'}}>{format(lastMessage.message?.createdAt)}</Text>
+                        <Text style={styles.convMessageCount}>{item.user._id === unreadMessages.receiver ? unreadMessages.count: 0}</Text>
+                    </SafeAreaView>
+                </TouchableOpacity>
+            </>
         ))
     }
 
@@ -171,12 +176,10 @@ const ChatScreen = () => {
                 <Room />
             </View>
             <View style={styles.content}>
-                <Text style={styles.allChat}>All Chat</Text>
                 { privateRoomsLoading && <ActivityIndicator size='large' />}
                 <ScrollView>
                     {PrivateRooms()}
                 </ScrollView>
-                
             </View>
         </View>
     );
@@ -188,13 +191,14 @@ const styles = StyleSheet.create({
         flexDirection: 'column',
         alignItems: 'center',
         width: '100%',
-        backgroundColor: '#F5FBFF'
     },
  
     header: {
         width: '100%',
         height: '26%',
         padding: 10,
+        backgroundColor: 'white'
+
     }, 
     content: {
         flex: 1,
@@ -205,7 +209,7 @@ const styles = StyleSheet.create({
         alignSelf: 'flex-start',
         padding: 10,
         fontSize: 20,
-        fontWeight: 'bold',
+        fontFamily: 'Montserrat-Medium'
     },
 
     convContainer: {
@@ -216,6 +220,7 @@ const styles = StyleSheet.create({
         margin: 10,
         width: '95%',
         borderRadius: 5,
+        fontFamily: 'Montserrat-Regular'
         // borderBottomWidth: 2,
         // borderTopWidth: 2,
         // borderColor: 'rgba(0,0,0,0.1)',
@@ -235,7 +240,7 @@ const styles = StyleSheet.create({
     convEndSection: {
         marginLeft: 20,
         flexDirection: 'column',
-        justifyContent: 'center',
+        justifyContent: 'space-around',
         alignItems: 'center',
         width: '100%',
         flexBasis: '25%',

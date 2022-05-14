@@ -21,6 +21,7 @@ import Dashboard from './src/screens/Dashboard'
 import { store, persister } from './src/redux/store';
 import Routes from './src/Routes/Routes'
 import {ContextProvider} from './src/Context/AppContext'
+
 const App = () => {
   return (
     <Provider store={store}>

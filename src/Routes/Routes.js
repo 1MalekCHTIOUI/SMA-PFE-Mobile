@@ -10,6 +10,7 @@ import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { useSelector } from 'react-redux';
 import Chat from '../screens/Chat';
 import Message from '../screens/Message';
+import Video from '../screens/VideoChat';
 import Account from '../screens/Account';
 import EditAccount from '../screens/EditAccount';
 
@@ -28,7 +29,11 @@ export default function Routes(){
         return (
             <ChatStack.Navigator> 
                 <ChatStack.Screen name="Chats" component={Chat} /> 
-                <ChatStack.Screen name="Messages" component={Message} /> 
+                <ChatStack.Screen name="Messages" options={{
+                    headerShown: false, // change this to `false`
+                    }} 
+                    component={Message} />
+                <ChatStack.Screen name="Videos" component={Video} />
             </ChatStack.Navigator>
         )
     }
@@ -64,8 +69,7 @@ export default function Routes(){
                                 tabBarShowLabel: false,
                                 headerShown: false,
                                 tabBarStyle: {
-                                    height: 60,
-                                    ...styles.shadow
+                                    height: 60
                                 }
                             }}
                         >

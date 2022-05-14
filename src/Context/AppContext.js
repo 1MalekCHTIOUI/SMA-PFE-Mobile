@@ -2,13 +2,13 @@ import axios from 'axios'
 import React, {createContext, useState, useRef, useEffect} from 'react'
 import { useSelector } from 'react-redux'
 import config from '../config'
-import {ActivityIndicator} from 'react-native'
+import {ActivityIndicator,Alert,View} from 'react-native'
 import { io } from 'socket.io-client'
 
 const AppContext = createContext()
 
 
-const socket = io.connect(config.SOCKET_SERVER)
+
 
 const ContextProvider = ({children}) => {
     const [rooms, setRooms] = useState([])
@@ -21,18 +21,55 @@ const ContextProvider = ({children}) => {
     const [profilePicture, setProfilePicture] = useState('')
     const [appLoading, setAppLoading] = useState(true)
     const [onlineUsers, setOnlineUsers] = useState([])
+    const [ROOM_ID, setROOM_ID] = useState('')
+
     const account = useSelector(s => s.account)
+    const socket = io.connect(config.SOCKET_SERVER)
+
+
+    const [callerId, setCallerId] = useState('')
+    const [declineInfo, setDeclineInfo] = useState(null)
+    const [callAccepted, setCallAccepted] = useState(false)
+    const [callDeclined, setCallDeclined] = useState(false)
+    const [callerMsg, setCallerMsg] = useState("")
+    const [isReceivingCall, setIsReceivingCall] = useState(false)
+    const [arrivalMessage, setArrivalMessage] = React.useState(null)
+    const [adminMessage, setAdminMessage] = React.useState(null)
+    const [groupMembers, setGroupMembers] = React.useState([])
+
+    const [userGroups, setUserGroups] = React.useState([])
+
+    const [arrivalNotification, setArrivalNotification] = React.useState(null)
 
     useEffect(() => {
-        if(account?.token) {
-            setProfilePicture('../../../public/uploads/profilePictures/'+account.user.profilePicture)
-            socket.emit("addUser", account.user._id)
+
+        // const LOGO = require('/public/uploads/profilePictures/'+account.user.profilePicture)
+        if(account.token) {
+            // setProfilePicture(LOGO)
+            socket.emit("addUser", account?.user._id)
         }
     }, [account])
-
+    
     useEffect(() => {
         setAppLoading(false)
     }, [])
+
+
+
+    const join = (ROOM_ID, type) => {
+        history.push({pathname: `/videochat/${ROOM_ID}`, state: {allowed: true, callData, type}})
+    }
+
+    const handleCallButton = (val) => {
+        const uid = v4()
+        socket.emit("callNotif", {
+            caller: {fullName: `${account?.user.first_name} ${account?.user.last_name}`, id: account?.user._id}, 
+            id: val._id,
+            room: uid
+        })
+        setROOM_ID(uid)
+
+    }
 
     React.useEffect(()=>{
         socket.on("getUsers", users => {
@@ -49,7 +86,18 @@ const ContextProvider = ({children}) => {
                 } 
 
                 const res = await axios.get(config.API_SERVER+'user/users/'+data.senderId)
-                openNotification('New message', {sender: `${res.data.first_name} ${res.data.last_name}`, text: data.text}, 'message')
+                Alert.alert(
+                    res.data.first_name +" "+ res.data.last_name,
+                    data.text,
+                    [
+                      {
+                        text: "Cancel",
+                        onPress: () => console.log("Cancel Pressed"),
+                        style: "cancel"
+                      },
+                      { text: "Go", onPress: () => userHasRoom(res.data)}
+                    ]
+                  );
                 setArrivalMessage({
                     sender: data.senderId,
                     text: data.text,
@@ -66,7 +114,7 @@ const ContextProvider = ({children}) => {
             console.log("got notif");
             try {
                 const res = await axios.get(config.API_SERVER+'user/users/'+data.senderId)
-                openNotification('Group', {sender: `${res.data.first_name} ${res.data.last_name}`, text: data.content}, 'notif')
+                // openNotification('Group', {sender: `${res.data.first_name} ${res.data.last_name}`, text: data.content}, 'notif')
                 setArrivalNotification({
                     title: 'Group',
                     sender: data.senderId,
@@ -78,6 +126,30 @@ const ContextProvider = ({children}) => {
 
         })
 
+        socket.on("getCallerID", (data)=>{
+            setCallerId(data)
+        })
+
+        socket.on("notif", data => {
+            console.log("receiving call");
+            setCallerMsg(data.msg)
+            setCallData(prev => ({...prev, receiver: data.caller}))
+            setIsReceivingCall(true)
+        })
+    
+        socket.on("callAccepted", (acceptName, status) => {
+            setCallData(prev => ({...prev, receiver: acceptName.acceptName}))
+            socket.on("getRoomID", data => setROOM_ID(data))
+            setIsReceivingCall(false)
+            setCallAccepted(true)
+        })
+    
+        socket.on("callDeclined", (data) => {
+            console.log("call declined");
+            setIsReceivingCall(false)
+            setCallDeclined(true)
+            setDeclineInfo(data.msg)
+        })
 
 
     },[socket])
@@ -94,7 +166,6 @@ const ContextProvider = ({children}) => {
 
 
     const userHasRoom = async (user) => {
-        console.log("userHasRoom called");
         try {
             setId(user._id)
             setCurrentChatUser(user)
@@ -124,8 +195,9 @@ const ContextProvider = ({children}) => {
     }
 
     return (
-        <AppContext.Provider value={{onlineUsers, messages, messagesLoading, sendMessage, setMessagesLoading, setMessages,userHasRoom, account, existInRoom, setExistInRoom, currentChatUser, setCurrentChatUser, currentChat, setCurrentChat, id, setId}}>
-            {appLoading && <ActivityIndicator size='large'/> }
+        <AppContext.Provider value={{onlineUsers, arrivalMessage, profilePicture, messages, messagesLoading,handleCallButton, sendMessage, setMessagesLoading, setMessages,userHasRoom, account, existInRoom, setExistInRoom, currentChatUser, setCurrentChatUser, currentChat, setCurrentChat, id, setId}}>
+            {appLoading && <View style={{position:'absolute', left: '50%', right: '50%'}}><ActivityIndicator size='large'/></View> }
+            {isReceivingCall && alert('YOUR BEING CALLED')}
             {children}
             
         </AppContext.Provider>

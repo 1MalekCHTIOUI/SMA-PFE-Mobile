@@ -5,10 +5,12 @@ import {format} from 'timeago.js'
 const Message = ({message, own}) => {
 
     return (
+        <>
         <View style={own ? styles.ownMessageContainer : styles.freindMessageContainer}>
-            <Text style={styles.text}>{message.text}</Text>
-            <Text style={styles.date}>{format(message.createdAt)}</Text>
+            <Text style={own? styles.text : [styles.text, {color: 'black'}]}>{message.text}</Text>
         </View>
+        <Text style={[own ? {alignSelf: 'flex-end', marginRight: 5} : {alignSelf: 'flex-start'} ,styles.date]} >{format(message.createdAt)}</Text>
+        </>
     );
 }
 
@@ -16,26 +18,27 @@ const styles = StyleSheet.create({
     freindMessageContainer: {
         justifyContent: 'center',
         width:"40%",
-        backgroundColor: 'rgba(0, 0, 0, 0.2)',
-        padding: 9,
+        backgroundColor: 'rgba(0, 0, 0, 0.05)',
+        padding: 13,
         margin: 3,
-        borderRadius: 1,
-        alignSelf: 'flex-end',
+        borderRadius: 2,
+        alignSelf: 'flex-start',
         marginTop: 5
     },
     ownMessageContainer: {
         justifyContent: 'center',
         width:"40%",
-        backgroundColor: 'rgba(144, 202, 249, 0.6)',
-        padding: 9,
+        backgroundColor: '#FF553F',
+        padding: 13,
         margin: 3,
-        borderRadius: 1,
-        alignSelf: 'flex-start',
+        borderRadius: 7,
+        alignSelf: 'flex-end',
         marginTop: 5
     },
     text: {
-        color: 'black', 
-        fontSize: 19,
+        color: 'white', 
+        fontFamily: 'Montserrat-Medium',
+        wordBreak: 'break-all',
     },
     date: {
         marginTop: 5,

@@ -22,7 +22,7 @@ const Separator = () => {
     return (
       <View>
 
-        <Text> Sample FlatList Header </Text>
+        <Text style={{ fontFamily: 'Montserrat-Regular' }}> Sample FlatList Header </Text>
 
       </View>
     );
@@ -48,16 +48,18 @@ const RoomScreen = ({setCurrentChat}) => {
     useEffect(()=>{
         getUsers()
     }, [])
+
     const noUsers = () => {
-      return <View style={{marginLeft: 140, justifyContent: 'center'}}><Text style={{fontSize: 15, fontWeight: 'bold'}}>No online users</Text></View>
+      return <View style={{marginLeft: 140, justifyContent: 'center'}}><Text style={{fontSize: 15, fontWeight: 'bold', fontFamily: 'Montserrat-Regular'}}>No online users</Text></View>
     }
+
     return (
         <SafeAreaView style={styles.MainContainer}>
-            <Text style={styles.titleText}>ONLINE USERS: {users.filter(user => user.userId !== account?.user._id).length}</Text>
+            <Text style={styles.titleText}>ONLINE USERS: {users.filter(user => user._id !== account?.user._id && onlineUsers.some(o => o.userId === user._id)).length}</Text>
             <FlatList
-                data={users.filter(user => user.userId !== account?.user._id)}
+                data={users.filter(user => user._id !== account?.user._id && onlineUsers.some(o => o.userId === user._id))}
                 onPress={() => userHasRoom(item)}
-                renderItem={({ item }) => loading===false ? <User user={item.userId} /> : <ActivityIndicator style={styles.loading} size="large" />}
+                renderItem={({ item }) => loading===false ? <User user={item._id} /> : <ActivityIndicator style={styles.loading} size="large" />}
                 keyExtractor={item => item.id}
                 ItemSeparatorComponent={Separator}
                 horizontal={true}
@@ -84,6 +86,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         marginBottom: 0,
         color: 'white',
+        fontFamily: 'Montserrat-Regular'
     },
     loading: {
         justifyContent: 'center',

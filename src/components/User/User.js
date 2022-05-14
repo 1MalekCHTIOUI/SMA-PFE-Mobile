@@ -9,23 +9,27 @@ const User = ({user}) => {
     const [l, setL] = useState(false)
     const { userHasRoom } = useContext(AppContext)
 
-    useEffect(async () =>{
-        try {
-            setL(true)
-            const res = await axios.get(config.API_SERVER+'user/users/'+user)
-            setData(res.data)
-            setL(false)
-        } catch (error) {
-            setL(false)
-            console.log(error);
+    useEffect(() =>{
+        const getUser = async () => {
+            try {
+                setL(true)
+                const res = await axios.get(config.API_SERVER+'user/users/'+user)
+                setData(res.data)
+                setL(false)
+            } catch (error) {
+                setL(false)
+                console.log(error);
+            }
         }
+        getUser()
+        return () => setData(null)
     }, [])
 
     return (
-        <Pressable style={styles.item} onPress={() => userHasRoom(user)}>
+        <Pressable style={styles.item} key={user._id} onPress={() => userHasRoom(user)}>
             {
                 l ? <ActivityIndicator size='large' /> : 
-                <View>
+                <View key={user._id}>
                     <View>                
                         <Image resizeMode='contain' source={DUMMY} style={styles.circleborder}/>
                     </View>
@@ -60,7 +64,6 @@ const styles = StyleSheet.create({
         height: 70,
         borderRadius: 150,
         borderColor: 'white',
-        elevation: 8
     }
 })
 

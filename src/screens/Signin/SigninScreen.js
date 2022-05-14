@@ -38,7 +38,8 @@ const SigninScreen = () => {
                 });
                 
                 setStatus({success: true})
-                navigation.navigate("Dashboard")
+                navigation.navigate('Dashboard', { screen: 'DashboardScreen' });
+                // navigation.navigate("Dashboard")
             }
             setLoading(false)
 
