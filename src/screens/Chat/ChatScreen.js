@@ -47,8 +47,14 @@ const ChatScreen = () => {
                         senderId: account.user._id,
                         receiverId: id
                     }
-                    const res = await axios.post(config.API_SERVER + "rooms", members)
-                    setCurrentChat(res.data)
+                    await axios.post(config.API_SERVER + "rooms", members)
+                    try {
+                        const res = await axios.get(config.API_SERVER + "user/users/"+id)
+                        userHasRoom(res.data)
+                    } catch (error) {
+                        console.log(error)
+                    }
+                    
                 } catch(err) {
                     console.log(err)
                 }
@@ -69,7 +75,9 @@ const ChatScreen = () => {
         }
     }
     useEffect(()=>{
-        getMessages()
+        if(currentChat){
+            getMessages()
+        }
     }, [currentChat])
 
     useEffect(()=>{
@@ -116,6 +124,7 @@ const ChatScreen = () => {
     
     const getLastRoomMessage = async () => {
         try {
+            setPrivateRoomsLoading(true)
             rooms?.map(async room => {
                 if(room.members.includes(account.user._id) && room.type==='PRIVATE'){
                     try {
@@ -127,7 +136,6 @@ const ChatScreen = () => {
                                     const messages = await axios.get(config.API_SERVER + 'messages/'+room._id)
                                     messages.data.map(message => {
                                         if(message.read===false){
-                                            console.log(message);
                                             setUnreadMessages({receiver: item, count: unreadMessages.count + 1})
                                         }
                                     })
@@ -139,7 +147,9 @@ const ChatScreen = () => {
                     }
                 }
             })
+            setPrivateRoomsLoading(false)
         } catch (error) {
+            setPrivateRoomsLoading(false)
             console.log(error);
         }
     }

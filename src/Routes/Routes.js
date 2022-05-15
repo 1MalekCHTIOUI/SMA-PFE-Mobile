@@ -30,8 +30,8 @@ export default function Routes(){
             <ChatStack.Navigator> 
                 <ChatStack.Screen name="Chats" component={Chat} /> 
                 <ChatStack.Screen name="Messages" options={{
-                    headerShown: false, // change this to `false`
-                    }} 
+                    headerShown: false,
+                }} 
                     component={Message} />
                 <ChatStack.Screen name="Videos" component={Video} />
             </ChatStack.Navigator>

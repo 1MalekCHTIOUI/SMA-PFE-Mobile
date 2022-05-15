@@ -52,6 +52,11 @@ const ContextProvider = ({children}) => {
     
     useEffect(() => {
         setAppLoading(false)
+        return () => {
+            setCurrentChatUser(null);
+            setCurrentChat(null)
+            setId(null)
+        }
     }, [])
 
 
@@ -167,6 +172,7 @@ const ContextProvider = ({children}) => {
 
     const userHasRoom = async (user) => {
         try {
+            console.log(user)
             setId(user._id)
             setCurrentChatUser(user)
             const res = await axios.get(config.API_SERVER + "rooms/" + user._id)

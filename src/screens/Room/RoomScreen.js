@@ -12,6 +12,7 @@ const Separator = () => {
           height: 100,
           width: 1,
           backgroundColor: "white",
+          marginLeft: 5
         }}
       />
     );
@@ -55,13 +56,11 @@ const RoomScreen = ({setCurrentChat}) => {
 
     return (
         <SafeAreaView style={styles.MainContainer}>
-            <Text style={styles.titleText}>ONLINE USERS: {users.filter(user => user._id !== account?.user._id && onlineUsers.some(o => o.userId === user._id)).length}</Text>
+            <Text style={styles.titleText}>USERS: {users.filter(user => user._id !== account?.user._id).length}</Text>
             <FlatList
-                data={users.filter(user => user._id !== account?.user._id && onlineUsers.some(o => o.userId === user._id))}
-                onPress={() => userHasRoom(item)}
-                renderItem={({ item }) => loading===false ? <User user={item._id} /> : <ActivityIndicator style={styles.loading} size="large" />}
+                data={users.filter(user => user._id !== account?.user._id)}
+                renderItem={({ item }) => loading===false ? <User user={item._id} online={onlineUsers.some(o => o.userId === item._id)}/> : <ActivityIndicator style={styles.loading} size="large" />}
                 keyExtractor={item => item.id}
-                ItemSeparatorComponent={Separator}
                 horizontal={true}
                 ListEmptyComponent={noUsers}
                 // ListHeaderComponent={FlatList_Header}

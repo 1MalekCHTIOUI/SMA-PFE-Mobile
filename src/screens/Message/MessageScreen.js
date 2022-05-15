@@ -23,7 +23,7 @@ const MessageScreen = () => {
     },[arrivalMessage])
 
     useEffect(() => {
-        console.log(onlineUsers);
+
         navigation.setOptions({ 
             title:  <View>
                         <Text style={{fontFamily: 'Montserrat-Bold', fontSize: 17}}>{currentChatUser.first_name} {currentChatUser.last_name}</Text>
@@ -44,8 +44,8 @@ const MessageScreen = () => {
                     </View>,
             headerTitleStyle: {
               fontSize: 18,
-              marginLeft: 75
             },
+            headerTitleAlign: 'center',
             headerShown: true,
             headerRight: () => (
                 <TouchableOpacity text="send" onPress={() => handleCallButton(currentChatUser._id)}>
@@ -60,12 +60,20 @@ const MessageScreen = () => {
     }, []);
 
     const readMessages = () => {
-        try {
-            
-        } catch (error) {
-            
-        }
+        messages?.map(async m => {
+            try {
+                if(m.read[account.user._id]===false){
+                    axios.put(config.API_SERVER+'messages/'+m.roomId, {currentUserId: account.user._id})
+                }
+            } catch (error) {
+                console.log(error);
+            }
+        })
     }
+
+    useEffect(() => {
+        readMessages()
+    }, [])
 
     // const handleCallButton = (id) => {
     //     const data = {
@@ -103,12 +111,17 @@ const MessageScreen = () => {
         //     newName = newFilename
         //     formData.append(`files[${x}]`, file[x], newFilename);
         // }
-
+        if(newMessage==='') return
+        const receiverId = currentChat.members.find(m => m !== account.user._id)
         const message= {
             roomId: currentChat._id,
             sender: account.user._id,
             text: newMessage,
-            attachment: []
+            attachment: [],
+            read: {
+                [account.user._id]: true,
+                [receiverId]: false
+            }
         }
         // if(file){
         //     file?.map(file => {
@@ -118,7 +131,6 @@ const MessageScreen = () => {
         //         }]
         //     })
         // }
-        const receiverId = currentChat.members.find(m => m !== account.user._id)
         try {
             setSendIsLoading(true)
             const res = await axios.post(config.API_SERVER+"messages", message)
@@ -164,7 +176,7 @@ const MessageScreen = () => {
                         <TouchableOpacity text="send" onPress={handleSubmit}>
                             <Image style={{height: 30, width: 30, marginVertical: 20, marginLeft: 10}} source={require('../../assets/images/send.png')} resizeMode='contain' />
                         </TouchableOpacity>                        
-                        <TouchableOpacity text="send" onPress={handleSubmit}>
+                        <TouchableOpacity text="send">
                             <Image style={{height: 30, width: 30, marginLeft: 10,  marginVertical: 20,tintColor: 'tomato'}} source={require('../../assets/images/file.png')} resizeMode='contain' />
                         </TouchableOpacity>
                         <ActivityIndicator style={{position: 'absolute', left: '45%'}} animating={sendIsLoading} />                     
