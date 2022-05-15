@@ -59,21 +59,25 @@ const MessageScreen = () => {
         }
     }, []);
 
-    const readMessages = () => {
+    const readMessages = async () => {
+        console.log("Setting as read");
         messages?.map(async m => {
             try {
+                console.log(m.read[account.user._id]);
                 if(m.read[account.user._id]===false){
-                    axios.put(config.API_SERVER+'messages/'+m.roomId, {currentUserId: account.user._id})
+                    axios.put(config.API_SERVER+'messages/readMessages/'+m.roomId, {currentUserId: account.user._id})
                 }
             } catch (error) {
-                console.log(error);
+                console.log(error.message);
             }
         })
     }
 
     useEffect(() => {
-        readMessages()
-    }, [])
+        if(currentChat){
+            readMessages()
+        }
+    }, [currentChat])
 
     // const handleCallButton = (id) => {
     //     const data = {

@@ -38,7 +38,6 @@ const styles = StyleSheet.create({
     text: {
         color: 'white', 
         fontFamily: 'Montserrat-Medium',
-        wordBreak: 'break-all',
     },
     date: {
         marginTop: 5,
