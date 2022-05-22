@@ -67,9 +67,6 @@ const DashboardScreen = () => {
     );
   }, [posts]);
 
-  React.useEffect(() => {
-    console.log(todaysPosts);
-  }, [todaysPosts]);
   return (
     <ScrollView style={styles.container}>
       <View style={styles.card}>
@@ -91,8 +88,8 @@ const DashboardScreen = () => {
         <Text style={{color: 'white'}}>{onlineUsers?.length}</Text>
       </View>
       <View>
-        {posts.map(item => (
-          <Post post={item} />
+        {posts.map((item, index) => (
+          <Post post={item} index={index} />
         ))}
       </View>
     </ScrollView>

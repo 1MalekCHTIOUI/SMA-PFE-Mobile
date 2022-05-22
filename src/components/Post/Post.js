@@ -22,7 +22,7 @@ import likeImage from '../../assets/icons/like.png';
 // import {Collapse, Grid, TextField, Typography} from '@material-ui/core';
 // import Comment from '../Comment/Comment';
 // import User1 from './../../../assets/images/users/user.svg';
-const Post = ({post}) => {
+const Post = ({post, index}) => {
   const {account} = useContext(AppContext);
   const [like, setLike] = useState(post.likes.length);
   const [isLiked, setIsLiked] = useState(
@@ -97,8 +97,9 @@ const Post = ({post}) => {
   const getUser = async () => {
     try {
       const fetchUser = await axios.get(
-        config.API_SERVER + 'user/users/' + post?.userId,
+        config.API_SERVER + 'user/users/' + post.userId,
       );
+      console.log(fetchUser.data.first_name);
       setUser(fetchUser.data);
     } catch (error) {
       console.log(error.message);
@@ -107,9 +108,8 @@ const Post = ({post}) => {
 
   const getPostComments = async () => {
     try {
-      console.log(post?._id);
       const fetchComments = await axios.get(
-        config.API_SERVER + 'posts/comment/' + post?._id,
+        config.API_SERVER + 'posts/comment/' + post._id,
       );
       setComments(fetchComments.data);
     } catch (error) {
@@ -119,7 +119,6 @@ const Post = ({post}) => {
 
   const submitComment = async () => {
     if (comment === '' && selectedFiles.length === 0) return;
-
     const postedComment = {
       postId: post._id,
       content: comment,
@@ -151,12 +150,12 @@ const Post = ({post}) => {
     getUser();
     getPostComments();
   }, []);
-  const itemsToShow = comments
-    ?.slice(0, numberOfitemsShown)
-    .map(comment => <Comment comment={comment} />);
+  // const itemsToShow = comments
+  //   ?.slice(0, numberOfitemsShown)
+  //   .map(comment => <Comment comment={comment} />);
   return (
-    <View style={styles.post} key={post._id}>
-      <View style={styles.postWrapper}>
+    <View style={styles.post} key={index}>
+      <View style={styles.postWrapper} key={post._id}>
         <View style={styles.postTop}>
           <View style={styles.postTopLeft}>
             <Image
@@ -232,7 +231,7 @@ const Post = ({post}) => {
             <TextInput
               style={styles.commentInput}
               value={comment}
-              onChange={e => setComment(e.target.value)}
+              onChangeText={setComment}
               fullWidth
               placeholder="Write comment"
             />
@@ -249,12 +248,14 @@ const Post = ({post}) => {
             <TouchableOpacity
               onPress={submitComment}
               style={styles.commentButton}>
-              <Text>Post</Text>
+              <Text style={{color: 'white'}}>Post</Text>
             </TouchableOpacity>
           </View>
-
-          {itemsToShow ? itemsToShow : <Text>Loading...</Text>}
-          {comments?.length > 0 && comments?.length !== itemsToShow?.length ? (
+          {/* {comments.map(comment => (
+            <Comment comment={comment} />
+          ))} */}
+          {/* {itemsToShow ? itemsToShow : <Text>Loading...</Text>} */}
+          {/* {comments?.length > 0 && comments?.length !== itemsToShow?.length ? (
             <TouchableOpacity
               style={{cursor: 'pointer', textAlign: 'center'}}
               onPress={showMore}>
@@ -266,7 +267,7 @@ const Post = ({post}) => {
               onPress={showLess}>
               <Text>Show less</Text>
             </TouchableOpacity>
-          )}
+          )} */}
         </View>
       )}
     </View>
@@ -283,7 +284,8 @@ const styles = StyleSheet.create({
   postWrapper: {
     borderRadius: 5,
     borderWidth: 1,
-    border: '1px solid rgba(0,0,0,0.2)',
+    borderColor: 'rgba(0,0,0,0.2)',
+
     // elevation: 0.2,
     // backgroundColor: 'tomato',
     padding: 5,
@@ -359,20 +361,22 @@ const styles = StyleSheet.create({
     fontSize: 15,
   },
   commentInput: {
-    border: 'none',
     width: '80%',
-    whiteSpace: 'pre',
     padding: 5,
-    boxShadow: '0px 0px 16px -8px rgba(0, 0, 0, 0.68)',
   },
   writeComment: {
     display: 'flex',
     // alignItems: 'center',
+    flexDirection: 'row',
+    borderLeftWidth: 1,
+    borderRightWidth: 1,
+    borderBottomWidth: 1,
+    borderRadius: 2,
+    borderColor: 'rgba(0,0,0,0.2)',
     padding: 5,
-    justifycontent: 'space-between',
+    justifyContent: 'space-between',
   },
   commentButton: {
-    border: 'none',
     padding: 7,
     borderRadius: 5,
     backgroundColor: 'green',
