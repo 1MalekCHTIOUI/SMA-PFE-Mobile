@@ -20,7 +20,8 @@ import {
 import likeImage from '../../assets/icons/like.png';
 
 // import {Collapse, Grid, TextField, Typography} from '@material-ui/core';
-// import Comment from '../Comment/Comment';
+import Comment from '../Comment/Comment';
+import {launchCamera, launchImageLibrary} from 'react-native-image-picker';
 // import User1 from './../../../assets/images/users/user.svg';
 const Post = ({post, index}) => {
   const {account} = useContext(AppContext);
@@ -34,12 +35,31 @@ const Post = ({post, index}) => {
 
   const [comments, setComments] = useState(null);
   const [comment, setComment] = useState('');
+
   const [show, setShow] = useState(false);
   const hiddenFileInput = useRef(null);
   const [content, setContent] = useState('');
+  const [commentFile, setCommentFile] = useState(null);
+  const options = {
+    title: 'Select Image',
+    type: 'library',
+    options: {
+      maxHeight: 200,
+      maxWidth: 200,
+      selectionLimit: 1,
+      mediaType: 'photo',
+      includeBase64: false,
+    },
+  };
 
-  const handleClick = event => {
-    hiddenFileInput.current.click();
+  const handleClick = async () => {
+    // hiddenFileInput.current.click();
+    try {
+      const images = await launchImageLibrary(options);
+      setCommentFile(images);
+    } catch (error) {
+      console.log(error);
+    }
   };
   const [selectedFiles, setSelectedFiles] = useState([]);
 
@@ -116,9 +136,14 @@ const Post = ({post, index}) => {
       console.log(error.message);
     }
   };
-
+  useEffect(() => {
+    if (commentFile) {
+      console.log(commentFile);
+    }
+  }, [commentFile]);
   const submitComment = async () => {
-    if (comment === '' && selectedFiles.length === 0) return;
+    if (comment === '' && commentFile === null) return;
+    const formData = new FormData();
     const postedComment = {
       postId: post._id,
       content: comment,
@@ -130,19 +155,35 @@ const Post = ({post, index}) => {
     if (content !== '') {
       postedComment.content = content;
     }
-    if (selectedFiles.length > 0) {
-      postedComment.selectedFiles = selectedFiles;
+    if (commentFile !== null) {
+      formData.append('file', {
+        uri: commentFile.assets[0].uri,
+        type: commentFile.assets[0].type,
+        name: commentFile.assets[0].fileName,
+      });
     }
-
     try {
-      const res = await axios.post(
-        config.API_SERVER + 'posts/comment',
-        postedComment,
+      const imageRes = await axios.post(
+        config.API_SERVER + 'upload',
+        formData,
+        {headers: {'Content-Type': 'multipart/form-data'}},
       );
-      setComments(prev => [...prev, res.data]);
-      setComment('');
+      postedComment.attachment = [imageRes.data.upload];
+      console.log(imageRes.data.upload);
+      try {
+        console.log(postedComment);
+        const res = await axios.post(
+          config.API_SERVER + 'posts/comment',
+          postedComment,
+        );
+        console.log(res.data);
+        setComments(prev => [...prev, res.data]);
+        setComment('');
+      } catch (error) {
+        console.log(error.response.data.message);
+      }
     } catch (error) {
-      console.log(error.message);
+      console.log(error.response.data.message);
     }
   };
 
@@ -184,19 +225,24 @@ const Post = ({post, index}) => {
         </View>
         <View style={styles.postCenter}>
           <Text style={styles.postText}>{post?.content}</Text>
-          {/* {post?.attachment.length > 0 && (
-            <Grid container xs={12}>
+          {post?.attachment.length > 0 && (
+            <View>
               {post?.attachment.map(f => (
-                <Grid item xs={12} justifyContent="center" alignItems="center">
+                <View
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                  }}>
                   <ImageonClick
                     style={styles.postImg}
-                    src={`/uploads/files/${f.actualName}`}
+                    source={config.CONTENT + `${f.actualName}`}
                     alt="loading..."
                   />
-                </Grid>
+                </View>
               ))}
-            </Grid>
-          )} */}
+            </View>
+          )}
 
           {/* <Image style={styles.postImg} source={post?.photo} alt="" /> */}
         </View>
@@ -218,7 +264,10 @@ const Post = ({post, index}) => {
           </View>
           <TouchableOpacity
             style={styles.postBottomRight}
-            onPress={() => setShow(!show)}>
+            onPress={() => {
+              setShow(!show);
+              console.log('test');
+            }}>
             <Text style={styles.postCommentText}>
               {comments?.length} comments
             </Text>
@@ -235,25 +284,34 @@ const Post = ({post, index}) => {
               fullWidth
               placeholder="Write comment"
             />
-            {/* <View style={styles.commentOption} onPress={handleClick}>
-              <PermMedia htmlColor="tomato" style={styles.commentIcon} />
-              <Text style={styles.commentOptionText}>Photo or Video</Text>
-              <TextInput
+            <TouchableOpacity
+              style={styles.commentOption}
+              onPress={handleClick}>
+              {/* <PermMedia htmlColor="tomato" style={styles.commentIcon} /> */}
+              <Image
+                source={require('../../assets/images/file.png')}
+                style={{width: 30, height: 30, tintColor: 'red'}}
+                resizeMode="contain"
+              />
+
+              {/* <TextInput
                 type="file"
                 ref={hiddenFileInput}
                 onChange={onChangeFileUpload}
                 style={{display: 'none'}}
-              />
-            </View> */}
+              /> */}
+            </TouchableOpacity>
             <TouchableOpacity
               onPress={submitComment}
               style={styles.commentButton}>
               <Text style={{color: 'white'}}>Post</Text>
             </TouchableOpacity>
           </View>
-          {/* {comments.map(comment => (
-            <Comment comment={comment} />
-          ))} */}
+          {comments.map((comment, index) => (
+            <View key={index}>
+              <Comment comment={comment} />
+            </View>
+          ))}
           {/* {itemsToShow ? itemsToShow : <Text>Loading...</Text>} */}
           {/* {comments?.length > 0 && comments?.length !== itemsToShow?.length ? (
             <TouchableOpacity
@@ -361,13 +419,14 @@ const styles = StyleSheet.create({
     fontSize: 15,
   },
   commentInput: {
-    width: '80%',
+    width: '70%',
     padding: 5,
   },
   writeComment: {
     display: 'flex',
-    // alignItems: 'center',
+    alignItems: 'center',
     flexDirection: 'row',
+    flexWrap: 'wrap',
     borderLeftWidth: 1,
     borderRightWidth: 1,
     borderBottomWidth: 1,
@@ -388,7 +447,8 @@ const styles = StyleSheet.create({
     padding: 7,
     display: 'flex',
     borderRadius: 5,
-    alignItems: 'center',
+    // alignItems: 'center',
+    // justifyContent: 'center',
     borderRadius: 5,
     border: '1px solid gray',
   },
@@ -397,8 +457,8 @@ const styles = StyleSheet.create({
     marginRight: '3px',
   },
   commentOptionText: {
-    fontSize: '14px',
-    fontWeight: 500,
+    fontSize: 14,
+    fontWeight: '500',
   },
 });
 

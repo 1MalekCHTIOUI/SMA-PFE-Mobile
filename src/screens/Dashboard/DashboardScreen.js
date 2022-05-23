@@ -89,7 +89,9 @@ const DashboardScreen = () => {
       </View>
       <View>
         {posts.map((item, index) => (
-          <Post post={item} index={index} />
+          <View key={index}>
+            <Post post={item} index={index} />
+          </View>
         ))}
       </View>
     </ScrollView>

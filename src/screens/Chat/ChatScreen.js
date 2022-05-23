@@ -117,7 +117,7 @@ const ChatScreen = () => {
   const [privateRoomsLoading, setPrivateRoomsLoading] = useState(false);
   const getPrivateRooms = () => {
     rooms?.map(item => {
-      if (item.type === 'PRIVATE') {
+      if (item.type === 'PRIVATE' || item.type === 'PUBLIC') {
         item.members.map(async m => {
           if (m !== account.user._id) {
             if (privateRooms?.some(user => user._id !== m)) return;
@@ -131,6 +131,7 @@ const ChatScreen = () => {
                 privateRooms?.some(user => user._id === res.data._id) === false
               ) {
                 console.warn('doesnt exist');
+                setPrivateRoomsLoading(true);
                 try {
                   const t = await axios.get(
                     config.API_SERVER + 'messages/lastMessage/' + item._id,
@@ -226,9 +227,13 @@ const ChatScreen = () => {
           <Image
             style={styles.convImage}
             resizeMode="contain"
-            source={{
-              uri: config.CONTENT + item.user.profilePicture,
-            }}
+            source={
+              item.user.profilePicture
+                ? {
+                    uri: config.CONTENT + item.user.profilePicture,
+                  }
+                : require('../../assets/images/user.png')
+            }
           />
           <SafeAreaView style={styles.convMiddleSection}>
             <Text

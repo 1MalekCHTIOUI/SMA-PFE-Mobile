@@ -13,50 +13,54 @@ import {AppContext} from '../../Context/AppContext';
 // import DUMMY from '../../../public/uploads/profilePictures/camp.png'
 const User = ({user, online}) => {
   const [data, setData] = useState(null);
-  const [l, setL] = useState(false);
+  // const [l, setL] = useState(false);
   const {userHasRoom} = useContext(AppContext);
 
-  useEffect(() => {
-    const getUser = async () => {
-      try {
-        setL(true);
-        const res = await axios.get(config.API_SERVER + 'user/users/' + user);
-        setData(res.data);
-        setL(false);
-      } catch (error) {
-        setL(false);
-        console.log(error);
-      }
-    };
-    getUser();
-    return () => setData(null);
-  }, []);
+  // useEffect(() => {
+  //   const getUser = async () => {
+  //     try {
+  //       setL(true);
+  //       const res = await axios.get(config.API_SERVER + 'user/users/' + user);
+  //       setData(res.data);
+  //       setL(false);
+  //     } catch (error) {
+  //       setL(false);
+  //       console.log(error);
+  //     }
+  //   };
+  //   getUser();
+  //   return () => setData(null);
+  // }, []);
 
   return (
     <Pressable
       style={styles.item}
       key={user._id}
-      onPress={() => userHasRoom(data)}>
-      {l ? (
+      onPress={() => userHasRoom(user)}>
+      {/* {l ? (
         <ActivityIndicator size="large" />
-      ) : (
-        <View key={user._id} style={{position: 'relative'}}>
-          <View>
-            <Image
-              resizeMode="contain"
-              source={{uri: config.CONTENT + data?.profilePicture}}
-              style={styles.circleborder}
-            />
-          </View>
-          <Text style={styles.itemText}>{data?.first_name}</Text>
-          <View
-            style={
-              online
-                ? [styles.dot, {backgroundColor: '#1dc249'}]
-                : [styles.dot, {backgroundColor: 'red'}]
-            }></View>
+      ) : ( */}
+      <View key={user._id} style={{position: 'relative'}}>
+        <View>
+          <Image
+            resizeMode="contain"
+            source={
+              user?.profilePicture
+                ? {uri: config.CONTENT + user?.profilePicture}
+                : require('../../assets/images/user.png')
+            }
+            style={styles.circleborder}
+          />
         </View>
-      )}
+        <Text style={styles.itemText}>{user?.first_name}</Text>
+        <View
+          style={
+            online
+              ? [styles.dot, {backgroundColor: '#1dc249'}]
+              : [styles.dot, {backgroundColor: 'red'}]
+          }></View>
+      </View>
+      {/* )} */}
     </Pressable>
   );
 };
@@ -81,6 +85,7 @@ const styles = StyleSheet.create({
     height: 70,
     borderRadius: 150,
     borderColor: 'white',
+    tintColor: 'rgba(0,0,0,0.1)',
   },
   dot: {
     position: 'absolute',
