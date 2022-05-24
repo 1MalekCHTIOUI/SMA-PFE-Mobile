@@ -1,4 +1,4 @@
-import React, {useContext, useEffect, useState} from 'react';
+import React, {useContext, useEffect, useRef, useState} from 'react';
 import {
   View,
   Text,
@@ -37,18 +37,30 @@ const MessageScreen = () => {
     account,
   } = useContext(AppContext);
   const [newMessage, setNewMessage] = useState('');
+  const scrollRef = useRef();
   const [sendIsLoading, setSendIsLoading] = useState(false);
 
   useEffect(() => {
-    arrivalMessage &&
+    console.log(arrivalMessage);
+    if (
+      arrivalMessage &&
       currentChat?.members.includes(arrivalMessage.sender) &&
-      currentChat.type === arrivalMessage.roomType &&
+      currentChat._id === arrivalMessage.currentChat
+    ) {
+      console.log('TIME TO SET RECEIVED MESSAGE IN ROOM');
+
       setMessages(prev => [...prev, arrivalMessage]);
+    }
   }, [arrivalMessage]);
 
   useEffect(() => {
+    return () => {
+      setCurrentChat(null) && navigation.navigate('Chats');
+    };
+  }, []);
+  useEffect(() => {
     {
-      currentChat.type === null &&
+      currentChat?.type === 'PRIVATE' &&
         navigation.setOptions({
           title: (
             <View>
@@ -118,7 +130,7 @@ const MessageScreen = () => {
             </TouchableOpacity>
           ),
         });
-      currentChat.type !== null &&
+      currentChat?.type === 'PUBLIC' &&
         navigation.setOptions({
           title: (
             <Text style={{fontFamily: 'Montserrat-Bold', fontSize: 17}}>
@@ -132,18 +144,14 @@ const MessageScreen = () => {
           headerShown: true,
         });
     }
-
-    return () => {
-      setCurrentChat(null);
-      navigation.navigate('Chats');
-    };
   }, []);
-
+  // React.useEffect(() => {
+  //   scrollRef.current?.scrollIntoView({behavior: 'smooth'});
+  // }, [messages]);
   const readMessages = async () => {
     console.log('Setting as read');
     messages?.map(async m => {
       try {
-        console.log(m.read[account.user._id]);
         if (m.read[account.user._id] === false) {
           axios.put(config.API_SERVER + 'messages/readMessages/' + m.roomId, {
             currentUserId: account.user._id,
@@ -242,7 +250,7 @@ const MessageScreen = () => {
       //     console.log(error.response.data.message);
       // }
       setSendIsLoading(false);
-      sendMessage(message.sender, receiverId, newMessage, currentChat.type);
+      sendMessage(message.sender, receiverId, newMessage, currentChat?._id);
     } catch (error) {
       setSendIsLoading(false);
       console.log(error);
@@ -261,6 +269,10 @@ const MessageScreen = () => {
       includeBase64: false,
     },
   };
+  React.useEffect(() => {
+    console.log('messages populated: ');
+    console.log(messages);
+  }, [messages]);
 
   const [commentFile, setCommentFile] = useState(null);
   const handleClick = async () => {
@@ -295,24 +307,25 @@ const MessageScreen = () => {
       {
         <>
           {currentChat ? (
-            <ScrollView>
+            <ScrollView
+              ref={scrollRef}
+              onContentSizeChange={() => scrollRef.current.scrollToEnd()}>
               <ActivityIndicator
                 size="large"
                 style={{position: 'absolute', left: '45%'}}
                 animating={messagesLoading}
               />
-              {messages &&
-                messages.map((m, i) => (
-                  <View key={i}>
-                    <Message
-                      message={m}
-                      own={m.sender === account.user._id}
-                      type={currentChat.type}
-                      key={i}
-                      mk={i}
-                    />
-                  </View>
-                ))}
+              {messages?.map((m, i) => (
+                <View key={i}>
+                  <Message
+                    message={m}
+                    own={m.sender === account.user._id}
+                    type={currentChat.type}
+                    key={i}
+                    mk={i}
+                  />
+                </View>
+              ))}
             </ScrollView>
           ) : null}
           <View style={styles.send}>

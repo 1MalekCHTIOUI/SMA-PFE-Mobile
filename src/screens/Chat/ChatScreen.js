@@ -9,6 +9,9 @@ import {
   ActivityIndicator,
   SafeAreaView,
   TouchableOpacity,
+  Modal,
+  Alert,
+  TextInput,
 } from 'react-native';
 import {useSelector, useDispatch} from 'react-redux';
 import CustomButton from '../../components/CustomButton';
@@ -20,11 +23,11 @@ import {Pressable} from 'react-native';
 import Message from '../../components/Message';
 import {useNavigation} from '@react-navigation/native';
 import {format} from 'timeago.js';
-
+import {Picker} from '@react-native-picker/picker';
+import CustomInput from '../../components/CustomInput';
 const ChatScreen = () => {
   const [rooms, setRooms] = useState([]);
   const navigation = useNavigation();
-
   const {
     id,
     setMessages,
@@ -35,11 +38,23 @@ const ChatScreen = () => {
     userHasRoom,
     existInRoom,
     account,
+    isChanged,
+    setIsChanged,
+    createGroup,
   } = useContext(AppContext);
 
   const dispatcher = useDispatch();
 
-  // const imageURL = `../../../public/uploads/profilePictures/${account.user.profilePicture}`
+  const [users, setUsers] = useState([]);
+
+  const getUsers = async () => {
+    try {
+      const u = await axios.get(config.API_SERVER + 'user/users');
+      setUsers(u.data);
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
   useEffect(() => {
     async function getRooms() {
@@ -156,6 +171,13 @@ const ChatScreen = () => {
       }
     });
   };
+  useEffect(() => {
+    if (isChanged) {
+      setPrivateRooms([]);
+      getPrivateRooms();
+      setIsChanged(false);
+    }
+  }, [isChanged]);
   const [lastMessage, setLastMessage] = useState('');
   const [unreadMessages, setUnreadMessages] = useState({
     receiver: '',
@@ -263,7 +285,60 @@ const ChatScreen = () => {
       </>
     ));
   };
+  const handleCreate = () => {
+    console.log('create');
+    getUsers();
+    setShow(true);
+  };
+  const [selectedUsers, setSelectedUsers] = useState([]);
+  const [groupName, setGroupName] = useState('');
+  const submitCreateGroup = async () => {
+    let data = {
+      name: groupName,
+      type: 'PUBLIC',
+      members: [],
+    };
+    selectedUsers.map(m => {
+      data.members.push(m._id);
+    });
 
+    if (account.user.role[0] !== 'USER') {
+      data.members.push(account.user._id);
+    }
+    console.log(groupName);
+    try {
+      const res = await axios.post(config.API_SERVER + 'rooms/newGroup', data);
+      createGroup(res.data);
+      setIsChanged(true);
+      setGroupName('');
+      setSelectedUsers([]);
+      setStatus(1);
+    } catch (e) {
+      console.log(e);
+    }
+  };
+  const [show, setShow] = useState(false);
+  const clean = () => {
+    setGroupName('');
+    setSelectedUsers([]);
+    setShow(false);
+  };
+  const handlePickerChange = val => {
+    if (selectedUsers.length > 0) {
+      console.log('ARRAY NOT EMPTY');
+      selectedUsers?.map(item => {
+        console.log(item._id + '   ' + val._id);
+        if (item._id !== val._id) {
+          console.log('PUSH DOESNT EXIST');
+          setSelectedUsers(prev => [...prev, val]);
+        }
+      });
+    }
+    if (selectedUsers.length === 0) {
+      console.log('PUSH EMPTY');
+      setSelectedUsers([val]);
+    }
+  };
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -271,6 +346,69 @@ const ChatScreen = () => {
       </View>
       <View style={styles.content}>
         {privateRoomsLoading && <ActivityIndicator size="large" />}
+        <View style={styles.buttonContainer} key="1F">
+          {privateRoomsLoading === false && (
+            <TouchableOpacity style={styles.button} onPress={handleCreate}>
+              <Text style={{fontSize: 15, fontWeight: 'bold'}}>
+                Create group!
+              </Text>
+            </TouchableOpacity>
+          )}
+
+          <Modal
+            animationType="slide"
+            transparent={true}
+            visible={show}
+            onRequestClose={() => {
+              setShow(false);
+            }}>
+            <View style={styles.overlay}>
+              <View style={styles.modalContent}>
+                <View>
+                  {selectedUsers.length > 0 &&
+                    selectedUsers.map(item => (
+                      <Text style={{color: 'white'}}>
+                        {item?.first_name} {item?.last_name}
+                      </Text>
+                    ))}
+                </View>
+                <View>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Group name"
+                    value={groupName}
+                    onChangeText={setGroupName}
+                  />
+                </View>
+                <Picker
+                  style={styles.picker}
+                  selectedValue={'SELECT'}
+                  onValueChange={(itemValue, itemIndex) =>
+                    handlePickerChange(itemValue)
+                  }>
+                  {users
+                    ?.filter(user => user._id !== account.user._id)
+                    .map(item => {
+                      // if (groupMembers.some(m => m._id !== item._id)) {
+                      return (
+                        <Picker.Item
+                          label={item.first_name + ' ' + item.last_name}
+                          value={item}
+                        />
+                      );
+                      // }
+                    })}
+                </Picker>
+                <View style={{width: '50%', margin: 5}}>
+                  <CustomButton text="Confirm" onPress={submitCreateGroup} />
+                </View>
+                <Pressable style={{margin: 5}} onPress={clean}>
+                  <Text style={{color: 'white'}}>Close</Text>
+                </Pressable>
+              </View>
+            </View>
+          </Modal>
+        </View>
         <ScrollView>{PrivateRooms()}</ScrollView>
       </View>
     </View>
@@ -284,12 +422,33 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     width: '100%',
   },
-
+  overlay: {
+    borderRadius: 15,
+    marginTop: '50%',
+    margin: 10,
+    flex: 0.7,
+    backgroundColor: 'rgba(0,0,0,0.8)',
+  },
+  modalContent: {
+    height: 50,
+    flexDirection: 'column',
+    // backgroundColor: 'white',
+    width: '100%',
+    height: '100%',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   header: {
     width: '100%',
     height: '26%',
     padding: 10,
     backgroundColor: 'white',
+  },
+  input: {
+    backgroundColor: 'white',
+    width: 275,
+    margin: 10,
   },
   content: {
     flex: 1,
@@ -343,6 +502,30 @@ const styles = StyleSheet.create({
     borderRadius: 50,
     textAlign: 'center',
     color: 'white',
+  },
+  buttonContainer: {
+    display: 'flex',
+
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: '100%',
+    padding: 10,
+  },
+  button: {
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: '50%',
+    height: 50,
+    backgroundColor: 'lightblue',
+  },
+  picker: {
+    height: 50,
+    width: '70%',
+    backgroundColor: 'white',
+    color: 'white',
+    textAlign: 'center',
+    borderRadius: 10,
   },
 });
 

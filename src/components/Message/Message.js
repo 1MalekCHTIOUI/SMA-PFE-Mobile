@@ -16,10 +16,12 @@ const Message = ({message, own, type}) => {
   //   message.attachment && console.log(message.attachment[0]);
   const [user, setUser] = useState({});
   const getUser = async () => {
+    if (message.sender === 'CHAT') return;
     try {
       const res = await axios.get(
         config.API_SERVER + 'user/users/' + message.sender,
       );
+      console.log(res.data);
       setUser(res.data);
     } catch (error) {
       console.log(error);
@@ -28,6 +30,12 @@ const Message = ({message, own, type}) => {
   useEffect(() => {
     getUser();
   }, []);
+  // useEffect(() => {
+  //   user && console.log(user);
+  // }, [user]);
+  // useEffect(() => {
+  //   console.log(message.sender);
+  // }, [message]);
   const [visible, setVisible] = useState(false);
   const previewImage = () => {
     setVisible(!visible);
@@ -36,10 +44,11 @@ const Message = ({message, own, type}) => {
     <>
       <View
         key={message._id}
-        style={
-          own ? styles.ownMessageContainer : styles.freindMessageContainer
-        }>
-        {type === 'PUBLIC' && (
+        style={[
+          own ? styles.ownMessageContainer : styles.freindMessageContainer,
+          message.sender === 'CHAT' && styles.bot,
+        ]}>
+        {type === 'PUBLIC' && message.sender !== 'CHAT' && (
           <Text
             style={
               own
@@ -49,9 +58,14 @@ const Message = ({message, own, type}) => {
             {user.first_name} {user.last_name}
           </Text>
         )}
-        <Text style={own ? styles.text : [styles.text, {color: 'black'}]}>
+        <Text
+          style={[
+            own ? styles.text : [styles.text, {color: 'black'}],
+            message.sender === 'CHAT' && {color: 'white'},
+          ]}>
           {message.text}
         </Text>
+
         {message.attachment.length > 0 && (
           <>
             <TouchableOpacity onPress={previewImage}>
@@ -113,7 +127,7 @@ const styles = StyleSheet.create({
   ownMessageContainer: {
     justifyContent: 'center',
     width: '40%',
-    backgroundColor: '#FF553F',
+    backgroundColor: '#ff3f5b',
     padding: 13,
     margin: 3,
     borderRadius: 7,
@@ -137,6 +151,13 @@ const styles = StyleSheet.create({
     flex: 1,
     width: '100%',
     height: '100%',
+  },
+  bot: {
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'lightblue',
+    borderRadius: 5,
   },
 });
 

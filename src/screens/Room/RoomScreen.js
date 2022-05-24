@@ -44,7 +44,8 @@ const RoomScreen = ({setCurrentChat}) => {
   const [groups, setGroups] = useState([]);
   const [loading, setLoading] = useState(false);
   const [filter, setFilter] = useState(true);
-  const {account, onlineUsers} = useContext(AppContext);
+  const {account, onlineUsers, isChanged, setIsChanged} =
+    useContext(AppContext);
 
   const getUsers = async () => {
     try {
@@ -70,7 +71,13 @@ const RoomScreen = ({setCurrentChat}) => {
       console.log(error);
     }
   };
-
+  useEffect(() => {
+    if (isChanged) {
+      getUsers();
+      getGroups();
+      setIsChanged(false);
+    }
+  }, [isChanged]);
   useEffect(() => {
     getUsers();
     getGroups();
@@ -114,12 +121,16 @@ const RoomScreen = ({setCurrentChat}) => {
         renderItem={({item}) =>
           loading === false ? (
             filter ? (
-              <User
-                user={item}
-                online={onlineUsers.some(o => o.userId === item._id)}
-              />
+              <View key={item._id}>
+                <User
+                  user={item}
+                  online={onlineUsers.some(o => o.userId === item._id)}
+                />
+              </View>
             ) : (
-              <Group group={item} />
+              <View key={item._id}>
+                <Group group={item} />
+              </View>
             )
           ) : (
             <ActivityIndicator style={styles.loading} size="large" />
