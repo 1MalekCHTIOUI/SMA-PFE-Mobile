@@ -239,7 +239,7 @@ const ChatScreen = () => {
             width: '94%',
             alignSelf: 'center',
             backgroundColor: 'rgba(0,0,0,0.2)',
-            height: 2,
+            height: 1,
             marginTop: 5,
           }}
         />
@@ -266,7 +266,12 @@ const ChatScreen = () => {
               }}>
               {item.user.first_name} {item.user.last_name}
             </Text>
-            <Text style={{fontFamily: 'Montserrat-Medium', paddingTop: 5}}>
+            <Text
+              style={{
+                fontFamily: 'Montserrat-Regular',
+                color: 'black',
+                paddingTop: 5,
+              }}>
               {item.user._id === lastMessage.receiver &&
                 lastMessage.message?.text}
             </Text>
@@ -464,7 +469,8 @@ const styles = StyleSheet.create({
 
   convContainer: {
     backgroundColor: 'white',
-    padding: 15,
+    padding: 5,
+    minHeight: 50,
     flexDirection: 'row',
     flexWrap: 'wrap',
     margin: 10,

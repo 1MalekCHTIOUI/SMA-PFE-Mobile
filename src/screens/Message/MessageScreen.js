@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
   Image,
 } from 'react-native';
+import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
 import {AppContext} from '../../Context/AppContext';
 import Message from '../../components/Message';
 import {useNavigation} from '@react-navigation/native';
@@ -64,7 +65,12 @@ const MessageScreen = () => {
         navigation.setOptions({
           title: (
             <View>
-              <Text style={{fontFamily: 'Montserrat-Bold', fontSize: 17}}>
+              <Text
+                style={{
+                  fontFamily: 'Montserrat-Bold',
+                  fontSize: 17,
+                  color: 'black',
+                }}>
                 {currentChatUser.first_name} {currentChatUser.last_name}
               </Text>
               <View
@@ -88,7 +94,7 @@ const MessageScreen = () => {
                         marginRight: 5,
                       }}
                     />
-                    <Text>Online</Text>
+                    <Text style={{color: 'black'}}>Online</Text>
                   </>
                 ) : (
                   <>
@@ -101,7 +107,7 @@ const MessageScreen = () => {
                         marginRight: 5,
                       }}
                     />
-                    <Text>Offline</Text>
+                    <Text style={{color: 'black'}}>Offline</Text>
                   </>
                 )}
               </View>
@@ -133,7 +139,12 @@ const MessageScreen = () => {
       currentChat?.type === 'PUBLIC' &&
         navigation.setOptions({
           title: (
-            <Text style={{fontFamily: 'Montserrat-Bold', fontSize: 17}}>
+            <Text
+              style={{
+                fontFamily: 'Montserrat-Bold',
+                fontSize: 17,
+                color: 'black',
+              }}>
               {currentChat.name}
             </Text>
           ),
@@ -269,10 +280,6 @@ const MessageScreen = () => {
       includeBase64: false,
     },
   };
-  React.useEffect(() => {
-    console.log('messages populated: ');
-    console.log(messages);
-  }, [messages]);
 
   const [commentFile, setCommentFile] = useState(null);
   const handleClick = async () => {
@@ -308,6 +315,7 @@ const MessageScreen = () => {
         <>
           {currentChat ? (
             <ScrollView
+              style={styles.messageArea}
               ref={scrollRef}
               onContentSizeChange={() => scrollRef.current.scrollToEnd()}>
               <ActivityIndicator
@@ -329,44 +337,46 @@ const MessageScreen = () => {
             </ScrollView>
           ) : null}
           <View style={styles.send}>
-            <View style={styles.input}>
-              <Reinput
-                value={newMessage}
-                fontSize={20}
-                onChangeText={x => setNewMessage(x)}
-                label="Send message"
-              />
-            </View>
+            <KeyboardAwareScrollView>
+              <View style={styles.input}>
+                <Reinput
+                  value={newMessage}
+                  fontSize={20}
+                  onChangeText={x => setNewMessage(x)}
+                  label="Send message"
+                />
+              </View>
 
-            <TouchableOpacity text="send" onPress={handleSubmit}>
-              <Image
-                style={{
-                  height: 30,
-                  width: 30,
-                  marginVertical: 20,
-                  marginLeft: 10,
-                }}
-                source={require('../../assets/images/send.png')}
-                resizeMode="contain"
+              <TouchableOpacity text="send" onPress={handleSubmit}>
+                <Image
+                  style={{
+                    height: 30,
+                    width: 30,
+                    marginVertical: 20,
+                    marginLeft: 10,
+                  }}
+                  source={require('../../assets/images/send.png')}
+                  resizeMode="contain"
+                />
+              </TouchableOpacity>
+              <TouchableOpacity text="send" onPress={handleClick}>
+                <Image
+                  style={{
+                    height: 30,
+                    width: 30,
+                    marginLeft: 10,
+                    marginVertical: 20,
+                    tintColor: 'tomato',
+                  }}
+                  source={require('../../assets/images/file.png')}
+                  resizeMode="contain"
+                />
+              </TouchableOpacity>
+              <ActivityIndicator
+                style={{position: 'absolute', left: '45%'}}
+                animating={sendIsLoading}
               />
-            </TouchableOpacity>
-            <TouchableOpacity text="send" onPress={handleClick}>
-              <Image
-                style={{
-                  height: 30,
-                  width: 30,
-                  marginLeft: 10,
-                  marginVertical: 20,
-                  tintColor: 'tomato',
-                }}
-                source={require('../../assets/images/file.png')}
-                resizeMode="contain"
-              />
-            </TouchableOpacity>
-            <ActivityIndicator
-              style={{position: 'absolute', left: '45%'}}
-              animating={sendIsLoading}
-            />
+            </KeyboardAwareScrollView>
           </View>
         </>
       }
@@ -376,22 +386,25 @@ const MessageScreen = () => {
 
 const styles = StyleSheet.create({
   messageArea: {
-    height: '100%',
+    height: '80%',
     flex: 1,
     padding: 8,
   },
   mainContainer: {
     flex: 1,
+    display: 'flex',
+    flexDirection: 'column',
     padding: 10,
     backgroundColor: 'white',
   },
   send: {
     flexDirection: 'row',
     width: '100%',
+    height: '50%',
     padding: 10,
   },
   input: {
-    width: '80%',
+    width: '50%',
   },
   tools: {
     justifyContent: 'space-evenly',

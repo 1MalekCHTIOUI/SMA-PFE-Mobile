@@ -113,34 +113,43 @@ const RoomScreen = ({setCurrentChat}) => {
           </Text>
         </TouchableOpacity>
       </View>
-
-      <FlatList
-        data={
-          filter ? users.filter(user => user._id !== account?.user._id) : groups
-        }
-        renderItem={({item}) =>
-          loading === false ? (
-            filter ? (
-              <View key={item._id}>
-                <User
-                  user={item}
-                  online={onlineUsers.some(o => o.userId === item._id)}
-                />
-              </View>
+      <View
+        style={{
+          position: 'relative',
+          flex: 1,
+          padding: 10,
+        }}>
+        <FlatList
+          style={{position: 'absolute'}}
+          data={
+            filter
+              ? users.filter(user => user._id !== account?.user._id)
+              : groups
+          }
+          renderItem={({item}) =>
+            loading === false ? (
+              filter ? (
+                <View key={item._id}>
+                  <User
+                    user={item}
+                    online={onlineUsers.some(o => o.userId === item._id)}
+                  />
+                </View>
+              ) : (
+                <View key={item._id}>
+                  <Group group={item} />
+                </View>
+              )
             ) : (
-              <View key={item._id}>
-                <Group group={item} />
-              </View>
+              <ActivityIndicator style={styles.loading} size="large" />
             )
-          ) : (
-            <ActivityIndicator style={styles.loading} size="large" />
-          )
-        }
-        keyExtractor={item => item.id}
-        horizontal={true}
-        ListEmptyComponent={noUsers}
-        // ListHeaderComponent={FlatList_Header}
-      />
+          }
+          keyExtractor={item => item.id}
+          horizontal={true}
+          ListEmptyComponent={noUsers}
+          // ListHeaderComponent={FlatList_Header}
+        />
+      </View>
     </SafeAreaView>
   );
 };
@@ -148,6 +157,8 @@ const RoomScreen = ({setCurrentChat}) => {
 const styles = StyleSheet.create({
   MainContainer: {
     flex: 1,
+    width: '100%',
+    height: '100%',
     backgroundColor: 'orange',
     borderRadius: 10,
     flexDirection: 'column',

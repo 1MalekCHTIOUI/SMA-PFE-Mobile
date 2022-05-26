@@ -12,6 +12,7 @@ import {
 import config from '../../config';
 import {AppContext} from '../../Context/AppContext';
 import Post from '../../components/Post/Post';
+import Share from '../../components/Profile/Share';
 const DashboardScreen = () => {
   const {onlineUsers, account} = useContext(AppContext);
   const [isLoading, setLoading] = useState(true);
@@ -88,7 +89,13 @@ const DashboardScreen = () => {
         <Text style={{color: 'white'}}>{onlineUsers?.length}</Text>
       </View>
       <View>
-        {posts.map((item, index) => (
+        <Share user={account.user} setPosts={setPosts} />
+      </View>
+      <View>
+        {postsLoading && (
+          <ActivityIndicator animating={postsLoading} size="large" />
+        )}
+        {posts?.map((item, index) => (
           <View key={index}>
             <Post post={item} index={index} />
           </View>

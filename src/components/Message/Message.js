@@ -66,7 +66,7 @@ const Message = ({message, own, type}) => {
           {message.text}
         </Text>
 
-        {message.attachment.length > 0 && (
+        {message?.attachment.length > 0 && (
           <>
             <TouchableOpacity onPress={previewImage}>
               <Image

@@ -4,13 +4,15 @@ import {useSelector} from 'react-redux';
 import config from '../config';
 import {ActivityIndicator, Alert, View} from 'react-native';
 import {io} from 'socket.io-client';
-
+// import {useNavigation} from '@react-navigation/native';
+// import {uuid} from 'uuidv4';
+import {navigate} from './navRef';
 const AppContext = createContext();
 
 const ContextProvider = ({children}) => {
   const [rooms, setRooms] = useState([]);
   const [isChanged, setIsChanged] = useState(false);
-
+  // const navigation = useNavigation();
   const [currentChatUser, setCurrentChatUser] = useState(null);
   const [id, setId] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -24,6 +26,7 @@ const ContextProvider = ({children}) => {
 
   const account = useSelector(s => s.account);
   const socket = io.connect(config.SOCKET_SERVER);
+  const [callData, setCallData] = useState({caller: '', receiver: ''});
 
   const [callerId, setCallerId] = useState('');
   const [declineInfo, setDeclineInfo] = useState(null);
@@ -31,13 +34,13 @@ const ContextProvider = ({children}) => {
   const [callDeclined, setCallDeclined] = useState(false);
   const [callerMsg, setCallerMsg] = useState('');
   const [isReceivingCall, setIsReceivingCall] = useState(false);
-  const [arrivalMessage, setArrivalMessage] = React.useState(null);
-  const [adminMessage, setAdminMessage] = React.useState(null);
-  const [groupMembers, setGroupMembers] = React.useState([]);
+  const [arrivalMessage, setArrivalMessage] = useState(null);
+  const [adminMessage, setAdminMessage] = useState(null);
+  const [groupMembers, setGroupMembers] = useState([]);
 
-  const [userGroups, setUserGroups] = React.useState([]);
+  const [userGroups, setUserGroups] = useState([]);
 
-  const [arrivalNotification, setArrivalNotification] = React.useState(null);
+  const [arrivalNotification, setArrivalNotification] = useState(null);
 
   useEffect(() => {
     // const LOGO = require('/public/uploads/profilePictures/'+account.user.profilePicture)
@@ -64,13 +67,14 @@ const ContextProvider = ({children}) => {
   };
 
   const handleCallButton = val => {
-    const uid = v4();
+    // const uid = uuid();
+    const uid = 'TE0ST5564644SCX5';
     socket.emit('callNotif', {
       caller: {
         fullName: `${account?.user.first_name} ${account?.user.last_name}`,
         id: account?.user._id,
       },
-      id: val._id,
+      id: val,
       room: uid,
     });
     setROOM_ID(uid);
@@ -165,6 +169,8 @@ const ContextProvider = ({children}) => {
       socket.on('getRoomID', data => setROOM_ID(data));
       setIsReceivingCall(false);
       setCallAccepted(true);
+      navigate('Videos');
+      console.log(acceptName + ' CALL ACCEPTED NAVIGATEEE');
     });
 
     socket.on('callDeclined', data => {
@@ -365,6 +371,7 @@ const ContextProvider = ({children}) => {
     <AppContext.Provider
       value={{
         createGroup,
+        ROOM_ID,
         onlineUsers,
         arrivalMessage,
         profilePicture,

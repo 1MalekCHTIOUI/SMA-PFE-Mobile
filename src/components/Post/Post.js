@@ -304,7 +304,7 @@ const Post = ({post, index}) => {
             <TouchableOpacity
               onPress={submitComment}
               style={styles.commentButton}>
-              <Text style={{color: 'white'}}>Post</Text>
+              <Text style={{color: 'black'}}>Post</Text>
             </TouchableOpacity>
           </View>
           {comments.map((comment, index) => (
@@ -335,7 +335,7 @@ const Post = ({post, index}) => {
 const styles = StyleSheet.create({
   post: {
     width: '100%',
-
+    elevation: 1,
     // boxShadow: '0px 0px 16px -8px rgba(0, 0, 0, 0.68)',
     padding: 20,
   },
@@ -378,10 +378,12 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '500',
     marginRight: 10,
+    color: 'black',
   },
   postDate: {
     fontSize: 12,
     marginRight: 10,
+    color: 'rgba(0,0,0,0.5)',
   },
   postCenter: {
     marginTop: 10,
@@ -394,6 +396,7 @@ const styles = StyleSheet.create({
   },
   postText: {
     fontSize: 15,
+    color: 'black',
   },
   postBottom: {
     flexDirection: 'row',
@@ -413,10 +416,12 @@ const styles = StyleSheet.create({
   },
   postLikeCounter: {
     fontSize: 15,
+    color: 'black',
   },
   postCommentText: {
     // borderBottom: '1px dashed gray',
     fontSize: 15,
+    color: 'black',
   },
   commentInput: {
     width: '70%',
