@@ -24,7 +24,7 @@ import Comment from '../Comment/Comment';
 import {launchCamera, launchImageLibrary} from 'react-native-image-picker';
 // import User1 from './../../../assets/images/users/user.svg';
 const Post = ({post, index}) => {
-  const {account} = useContext(AppContext);
+  const {account, emitNewLike} = useContext(AppContext);
   const [like, setLike] = useState(post.likes.length);
   const [isLiked, setIsLiked] = useState(
     post.likes.some(u => u.userId === account?.user._id),
@@ -84,6 +84,7 @@ const Post = ({post, index}) => {
         userId: account.user._id,
         username: `${user.first_name} ${user.last_name}`,
       });
+      emitNewLike(account.user._id, post.userId);
     } catch (error) {
       console.log(error);
     }

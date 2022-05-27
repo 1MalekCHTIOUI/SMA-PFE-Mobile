@@ -16,6 +16,7 @@ import {launchImageLibrary} from 'react-native-image-picker';
 import {Picker} from '@react-native-picker/picker';
 import {useSelector} from 'react-redux';
 import axios from 'axios';
+import {AppContext} from '../../Context/AppContext';
 
 const options = {
   title: 'Select Image',
@@ -52,7 +53,8 @@ const Divider = () => {
 };
 const Share = ({user, setPosts}) => {
   const hiddenFileInput = React.useRef(null);
-  const account = useSelector(s => s.account);
+
+  const {account, emitNewPost} = React.useContext(AppContext);
   const [content, setContent] = React.useState('');
   const [announcement, setAnnouncement] = React.useState(false);
   const [postPrivacy, setPostPrivacy] = React.useState(true);
@@ -129,7 +131,7 @@ const Share = ({user, setPosts}) => {
       }
 
       const res = await axios.post(config.API_SERVER + 'posts', post);
-
+      emitNewPost(account.user._id, post.priority);
       setPosts(prev => [...prev, res.data]);
       setPosting(false);
     } catch (error) {
