@@ -69,11 +69,16 @@ const User = ({user, online}) => {
                 <Image
                   resizeMode="contain"
                   source={
-                    user?.profilePicture
-                      ? {uri: config.CONTENT + user?.profilePicture}
-                      : require('../../assets/images/user2.png')
+                    user.profilePicture
+                      ? {
+                          uri: config.CONTENT + user.profilePicture,
+                        }
+                      : require('../../assets/images/user.png')
                   }
-                  style={styles.circleborder}
+                  style={[
+                    styles.circleborder,
+                    user.profilePicture === undefined && {tintColor: 'white'},
+                  ]}
                 />
               </View>
               <Text style={styles.itemText}>{user?.first_name}</Text>
@@ -87,7 +92,8 @@ const User = ({user, online}) => {
           </MenuTrigger>
 
           <MenuOptions>
-            <MenuOption onSelect={() => navigation.navigate('Profiles')}>
+            <MenuOption
+              onSelect={() => navigation.navigate('Profiles', {user: user})}>
               <Text style={{color: 'black'}}>Profile</Text>
             </MenuOption>
             <MenuOption onSelect={() => userHasRoom(user)}>
@@ -115,12 +121,11 @@ const styles = StyleSheet.create({
   },
   circleborder: {
     overflow: 'hidden',
-    borderWidth: 2,
+    borderWidth: 1,
     width: 40,
     height: 40,
     borderRadius: 150,
     borderColor: 'white',
-    tintColor: 'white',
   },
   dot: {
     position: 'absolute',

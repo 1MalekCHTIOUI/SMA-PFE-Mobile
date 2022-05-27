@@ -168,7 +168,12 @@ const Post = ({post, index}) => {
         formData,
         {headers: {'Content-Type': 'multipart/form-data'}},
       );
-      postedComment.attachment = [imageRes.data.upload];
+      postedComment.attachment = [
+        {
+          displayName: commentFile.assets[0].fileName,
+          actualName: imageRes.data.upload,
+        },
+      ];
       console.log(imageRes.data.upload);
       try {
         console.log(postedComment);
@@ -195,8 +200,15 @@ const Post = ({post, index}) => {
   //   ?.slice(0, numberOfitemsShown)
   //   .map(comment => <Comment comment={comment} />);
   return (
-    <View style={styles.post} key={index}>
-      <View style={styles.postWrapper} key={post._id}>
+    <View
+      style={[styles.post, post.priority === true && {width: 300}]}
+      key={index}>
+      <View
+        style={[
+          styles.postWrapper,
+          [post.priority === true && {backgroundColor: '#d9f4ff'}],
+        ]}
+        key={post._id}>
         <View style={styles.postTop}>
           <View style={styles.postTopLeft}>
             <Image
@@ -225,24 +237,18 @@ const Post = ({post, index}) => {
         </View>
         <View style={styles.postCenter}>
           <Text style={styles.postText}>{post?.content}</Text>
-          {post?.attachment.length > 0 && (
-            <View>
-              {post?.attachment.map(f => (
-                <View
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                  }}>
-                  <ImageonClick
-                    style={styles.postImg}
-                    source={config.CONTENT + `${f.actualName}`}
-                    alt="loading..."
-                  />
-                </View>
-              ))}
-            </View>
-          )}
+
+          {post?.attachment.length > 0 &&
+            post?.attachment.map(f => (
+              <View style={styles.imageContainer}>
+                <Image
+                  style={styles.postImg}
+                  source={{uri: config.CONTENT + f.actualName}}
+                  resizeMode="stretch"
+                  alt="loading..."
+                />
+              </View>
+            ))}
 
           {/* <Image style={styles.postImg} source={post?.photo} alt="" /> */}
         </View>
@@ -335,15 +341,15 @@ const Post = ({post, index}) => {
 const styles = StyleSheet.create({
   post: {
     width: '100%',
-    elevation: 1,
+
     // boxShadow: '0px 0px 16px -8px rgba(0, 0, 0, 0.68)',
-    padding: 20,
+    padding: 10,
   },
   postWrapper: {
     borderRadius: 5,
     borderWidth: 1,
     borderColor: 'rgba(0,0,0,0.2)',
-
+    elevation: 1.5,
     // elevation: 0.2,
     // backgroundColor: 'tomato',
     padding: 5,
@@ -386,13 +392,17 @@ const styles = StyleSheet.create({
     color: 'rgba(0,0,0,0.5)',
   },
   postCenter: {
+    flex: 1,
     marginTop: 10,
     marginBottom: 10,
   },
   postImg: {
-    marginTop: 20,
+    marginTop: 10,
+    elevation: 1,
     width: '100%',
+    height: '100%',
     maxHeight: 500,
+    borderRadius: 5,
   },
   postText: {
     fontSize: 15,
@@ -410,8 +420,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   likeIcon: {
-    width: 24,
-    height: 24,
+    width: 34,
+    height: 34,
     marginRight: 10,
   },
   postLikeCounter: {
@@ -464,6 +474,13 @@ const styles = StyleSheet.create({
   commentOptionText: {
     fontSize: 14,
     fontWeight: '500',
+  },
+  imageContainer: {
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    height: 200,
+    width: '100%',
   },
 });
 

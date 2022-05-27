@@ -337,46 +337,46 @@ const MessageScreen = () => {
             </ScrollView>
           ) : null}
           <View style={styles.send}>
-            <KeyboardAwareScrollView>
-              <View style={styles.input}>
-                <Reinput
-                  value={newMessage}
-                  fontSize={20}
-                  onChangeText={x => setNewMessage(x)}
-                  label="Send message"
-                />
-              </View>
-
-              <TouchableOpacity text="send" onPress={handleSubmit}>
-                <Image
-                  style={{
-                    height: 30,
-                    width: 30,
-                    marginVertical: 20,
-                    marginLeft: 10,
-                  }}
-                  source={require('../../assets/images/send.png')}
-                  resizeMode="contain"
-                />
-              </TouchableOpacity>
-              <TouchableOpacity text="send" onPress={handleClick}>
-                <Image
-                  style={{
-                    height: 30,
-                    width: 30,
-                    marginLeft: 10,
-                    marginVertical: 20,
-                    tintColor: 'tomato',
-                  }}
-                  source={require('../../assets/images/file.png')}
-                  resizeMode="contain"
-                />
-              </TouchableOpacity>
-              <ActivityIndicator
-                style={{position: 'absolute', left: '45%'}}
-                animating={sendIsLoading}
+            {/* <KeyboardAwareScrollView style={styles.send}> */}
+            <View style={styles.input}>
+              <Reinput
+                value={newMessage}
+                fontSize={20}
+                onChangeText={x => setNewMessage(x)}
+                label="Send message"
               />
-            </KeyboardAwareScrollView>
+            </View>
+
+            <TouchableOpacity text="send" onPress={handleSubmit}>
+              <Image
+                style={{
+                  height: 30,
+                  width: 30,
+                  marginVertical: 20,
+                  marginLeft: 10,
+                }}
+                source={require('../../assets/images/send.png')}
+                resizeMode="contain"
+              />
+            </TouchableOpacity>
+            <TouchableOpacity text="send" onPress={handleClick}>
+              <Image
+                style={{
+                  height: 30,
+                  width: 30,
+                  marginLeft: 10,
+                  marginVertical: 20,
+                  tintColor: 'tomato',
+                }}
+                source={require('../../assets/images/file.png')}
+                resizeMode="contain"
+              />
+            </TouchableOpacity>
+            <ActivityIndicator
+              style={{position: 'absolute', left: '45%'}}
+              animating={sendIsLoading}
+            />
+            {/* </KeyboardAwareScrollView> */}
           </View>
         </>
       }
@@ -386,25 +386,22 @@ const MessageScreen = () => {
 
 const styles = StyleSheet.create({
   messageArea: {
-    height: '80%',
+    height: '100%',
     flex: 1,
     padding: 8,
   },
   mainContainer: {
     flex: 1,
-    display: 'flex',
-    flexDirection: 'column',
     padding: 10,
     backgroundColor: 'white',
   },
   send: {
     flexDirection: 'row',
     width: '100%',
-    height: '50%',
     padding: 10,
   },
   input: {
-    width: '50%',
+    width: '80%',
   },
   tools: {
     justifyContent: 'space-evenly',

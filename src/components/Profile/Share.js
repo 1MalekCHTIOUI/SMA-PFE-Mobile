@@ -6,6 +6,7 @@ import {
   Image,
   Text,
   Pressable,
+  ActivityIndicator,
   TouchableOpacity,
 } from 'react-native';
 
@@ -27,19 +28,45 @@ const options = {
     includeBase64: false,
   },
 };
-
+const Divider = () => {
+  return (
+    <View
+      style={{
+        width: '100%',
+        marginTop: 10,
+        marginBottom: 10,
+        display: 'flex',
+        alignItems: 'center',
+      }}>
+      <View
+        style={{
+          height: 2,
+          backgroundColor: 'rgba(0,0,0,0.1)',
+          //   elevation: 1,
+          width: '80%',
+          borderRadius: 10,
+        }}
+      />
+    </View>
+  );
+};
 const Share = ({user, setPosts}) => {
   const hiddenFileInput = React.useRef(null);
   const account = useSelector(s => s.account);
   const [content, setContent] = React.useState('');
   const [announcement, setAnnouncement] = React.useState(false);
   const [postPrivacy, setPostPrivacy] = React.useState(true);
-  const [commentFile, setCommentFile] = React.useState(null);
+  const [postFile, setPostFile] = React.useState(null);
+  const [reader, setReader] = React.useState([]);
 
   const handleClick = async () => {
     try {
       const images = await launchImageLibrary(options);
-      setCommentFile(images);
+      // let reader = new FileReader();
+      // let url = reader.readAsDataURL(images);
+      // setReader(reader.result);
+      setPostFile(images);
+      console.log(url);
     } catch (error) {
       console.log(error);
     }
@@ -52,13 +79,18 @@ const Share = ({user, setPosts}) => {
   const removeItem = val => {
     setSelectedFiles(prev => prev.filter(item => item.name !== val));
   };
-  const handleChange = e => {
-    setContent(e.target.value);
-  };
+  // const handleChange = () => {
+  //   setContent(e.target.value);
+  // };
+
+  React.useEffect(() => {
+    console.log(content);
+  }, [content]);
+  const [posting, setPosting] = React.useState(false);
   const submitPost = async () => {
     const formData = new FormData();
-    if (content === '' && commentFile === null) return;
-
+    if (content === '' && postFile === null) return;
+    setPosting(true);
     const post = {
       userId: account.user._id,
       visibility: postPrivacy,
@@ -67,19 +99,17 @@ const Share = ({user, setPosts}) => {
     if (content !== '') {
       post.content = content;
     }
-    if (commentFile !== null) {
+    if (postFile !== null) {
       formData.append('file', {
-        uri: commentFile.assets[0].uri,
-        type: commentFile.assets[0].type,
-        name: commentFile.assets[0].fileName,
+        uri: postFile.assets[0].uri,
+        type: postFile.assets[0].type,
+        name: postFile.assets[0].fileName,
       });
     }
 
-    console.log(post);
-
     try {
       try {
-        if (commentFile !== null) {
+        if (postFile !== null) {
           const response = await axios.post(
             config.API_SERVER + 'upload',
             formData,
@@ -87,52 +117,77 @@ const Share = ({user, setPosts}) => {
           );
           post.attachment = [
             {
-              displayName: commentFile.assets[0].fileName,
+              displayName: postFile.assets[0].fileName,
               actualName: response.data.upload,
             },
           ];
-          console.log(message.attachment);
         }
+        console.log(post);
       } catch (error) {
+        setPosting(false);
         console.log(error);
       }
+
       const res = await axios.post(config.API_SERVER + 'posts', post);
+
       setPosts(prev => [...prev, res.data]);
+      setPosting(false);
     } catch (error) {
-      console.log(error);
+      setPosting(false);
+      console.log(error.message);
     }
   };
   return (
     <View style={styles.share}>
       <View style={styles.shareWrapper}>
-        <View className="sharePrivacy">
-          <Picker
-            style={styles.picker}
-            selectedValue={postPrivacy}
-            onValueChange={(itemValue, itemIndex) => setPostPrivacy(itemValue)}>
-            <Picker.Item label="Public" value={true} />
-            <Picker.Item label="Private" value={false} />
-          </Picker>
-          {user.role !== 'USER' && (
-            <Picker
-              style={styles.picker}
-              selectedValue={announcement}
-              onValueChange={(itemValue, itemIndex) =>
-                setAnnouncement(itemValue)
-              }>
-              <Picker.Item
-                tyle={{color: 'black'}}
-                label="Normal Post"
-                value={false}
-              />
-              <Picker.Item label="Announcement" value={true} />
-            </Picker>
+        <View style={styles.pickerWrapper}>
+          {announcement === false && (
+            <View style={styles.picker}>
+              <Picker
+                selectedValue={postPrivacy}
+                onValueChange={(itemValue, itemIndex) =>
+                  setPostPrivacy(itemValue)
+                }>
+                <Picker.Item
+                  style={{color: 'black'}}
+                  label="Public"
+                  value={true}
+                />
+                <Picker.Item
+                  style={{color: 'black'}}
+                  label="Private"
+                  value={false}
+                />
+              </Picker>
+            </View>
           )}
-        </View>
 
-        <View className="shareTop">
+          <View style={styles.picker}>
+            {user.role[0] !== 'USER' && (
+              <Picker
+                selectedValue={announcement}
+                onValueChange={(itemValue, itemIndex) =>
+                  setAnnouncement(itemValue)
+                }>
+                <Picker.Item
+                  style={{color: 'black'}}
+                  label="Post"
+                  value={false}
+                />
+                <Picker.Item
+                  style={{color: 'black'}}
+                  label="Announcement"
+                  value={true}
+                />
+              </Picker>
+            )}
+          </View>
+        </View>
+        <Divider />
+        <View style={styles.shareTop}>
           <Image
-            className="shareProfileImg"
+            style={styles.shareProfileImg}
+            resizeMode="contain"
             source={
               user.profilePicture
                 ? {uri: config.HOST + `public/uploads/${user.profilePicture}`}
@@ -143,11 +198,12 @@ const Share = ({user, setPosts}) => {
           <TextInput
             placeholder={`What's in your mind ${user.first_name}?`}
             value={content}
-            onChange={handleChange}
-            className="shareInput"
+            placeholderTextColor="rgba(0,0,0,0.4)"
+            onChangeText={setContent}
+            style={styles.shareInput}
           />
         </View>
-
+        <Divider />
         {/* <View className="shareMiddle">
           <ImageList sx={{width: '100%'}} rowHeight={164} cols={3}>
             {selectedFiles?.map((item, i) => {
@@ -171,6 +227,15 @@ const Share = ({user, setPosts}) => {
             })}
           </ImageList>
         </View> */}
+        <View>
+          {postFile && (
+            <Image
+              source={postFile}
+              resizeMode="contain"
+              style={{width: 300, height: 300}}
+            />
+          )}
+        </View>
         {/* <hr className="shareHr" /> */}
         <View style={styles.shareBottom}>
           <View style={styles.shareOptions}>
@@ -199,9 +264,16 @@ const Share = ({user, setPosts}) => {
               <span className="shareOptionText">Feelings</span>
             </View> */}
           </View>
-          <Pressable style={styles.shareButton} onClick={submitPost}>
-            <Text>Share</Text>
-          </Pressable>
+          <TouchableOpacity
+            disabled={posting}
+            style={styles.shareButton}
+            onPress={submitPost}>
+            {posting ? (
+              <ActivityIndicator animating={posting} />
+            ) : (
+              <Text style={{color: 'white'}}>Share</Text>
+            )}
+          </TouchableOpacity>
         </View>
       </View>
     </View>
@@ -213,20 +285,27 @@ export default Share;
 const styles = StyleSheet.create({
   share: {
     flex: 1,
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   shareWrapper: {
     display: 'flex',
     justifyContent: 'center',
     flexDirection: 'column',
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    padding: 5,
+    borderWidth: 1,
+    borderColor: 'gray',
+    // backgroundColor: 'red',
+    width: '94%',
   },
   shareButton: {
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
-    width: 50,
+    width: 60,
     height: 40,
-    backgroundColor: 'red',
+    backgroundColor: '#ff004e',
     borderRadius: 5,
   },
   shareBottom: {
@@ -234,8 +313,47 @@ const styles = StyleSheet.create({
     justifyContent: 'space-around',
     alignItems: 'center',
     flexDirection: 'row',
+    height: 50,
   },
   pickerItem: {
     color: 'black',
+  },
+  picker: {
+    display: 'flex',
+    justifyContent: 'center',
+    // alignItems: 'center',
+    backgroundColor: 'orange',
+    width: '45%',
+    height: 40,
+    borderRadius: 5,
+  },
+  pickerWrapper: {
+    padding: 5,
+    display: 'flex',
+    flexDirection: 'row',
+    justifyContent: 'space-evenly',
+    alignItems: 'center',
+  },
+  shareProfileImg: {
+    width: 50,
+    height: 50,
+    borderRadius: 50,
+    backgroundColor: 'gray',
+    borderWidth: 1,
+    borderColor: 'black',
+  },
+
+  shareInput: {
+    width: '65%',
+    color: 'black',
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.2)',
+    borderRadius: 10,
+  },
+  shareTop: {
+    display: 'flex',
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
   },
 });

@@ -8,6 +8,7 @@ import {
   Text,
   StyleSheet,
   ActivityIndicator,
+  RefreshControl,
 } from 'react-native';
 import config from '../../config';
 import {AppContext} from '../../Context/AppContext';
@@ -28,38 +29,39 @@ const DashboardScreen = () => {
   }, []);
 
   const [usersLoading, setUsersLoading] = React.useState(false);
+  const getOnlineUsers = () => {
+    onlineUsers?.map(async item => {
+      try {
+        setUsersLoading(true);
+        const users = await axios.get(
+          config.API_SERVER + 'user/users/' + item.userId,
+        );
+        onliners.find(u => u._id === users.data._id) === undefined &&
+          setOnliners(prev => [...prev, users.data]);
+        setUsersLoading(false);
+      } catch (error) {
+        setUsersLoading(false);
+        console.log(error);
+      }
+    });
+  };
   React.useEffect(() => {
-    const getOnlineUsers = () => {
-      onlineUsers?.map(async item => {
-        try {
-          setUsersLoading(true);
-          const users = await axios.get(
-            config.API_SERVER + 'user/users/' + item.userId,
-          );
-          onliners.find(u => u._id === users.data._id) === undefined &&
-            setOnliners(prev => [...prev, users.data]);
-          setUsersLoading(false);
-        } catch (error) {
-          setUsersLoading(false);
-          console.log(error);
-        }
-      });
-    };
     getOnlineUsers();
   }, [onlineUsers]);
 
+  const fetchPublicPosts = async () => {
+    try {
+      setPostsLoading(true);
+      const fetchPosts = await axios.get(config.API_SERVER + 'posts');
+      setPosts(fetchPosts.data.filter(p => p.visibility === true));
+      setPostsLoading(false);
+    } catch (error) {
+      setPostsLoading(false);
+      console.log(error);
+    }
+  };
+
   React.useEffect(() => {
-    const fetchPublicPosts = async () => {
-      try {
-        setPostsLoading(true);
-        const fetchPosts = await axios.get(config.API_SERVER + 'posts');
-        setPosts(fetchPosts.data.filter(p => p.visibility === true));
-        setPostsLoading(false);
-      } catch (error) {
-        setPostsLoading(false);
-        console.log(error);
-      }
-    };
     fetchPublicPosts();
   }, []);
   React.useEffect(() => {
@@ -68,8 +70,23 @@ const DashboardScreen = () => {
     );
   }, [posts]);
 
+  const [refreshing, setRefreshing] = React.useState(false);
+  const onRefresh = () => {
+    setRefreshing(true);
+    getOnlineUsers();
+    fetchPublicPosts();
+
+    setTimeout(() => {
+      // changeColor('green');
+      setRefreshing(false);
+    }, 2000);
+  };
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView
+      style={styles.container}
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+      }>
       <View style={styles.card}>
         <Text
           style={{
@@ -91,15 +108,28 @@ const DashboardScreen = () => {
       <View>
         <Share user={account.user} setPosts={setPosts} />
       </View>
+      {postsLoading && refreshing && (
+        <ActivityIndicator animating={postsLoading} size="large" />
+      )}
+      <View style={styles.ann}>
+        <ScrollView horizontal={true}>
+          {posts
+            ?.filter(post => post.priority === true)
+            .map((item, index) => (
+              <View key={index}>
+                <Post post={item} index={index} />
+              </View>
+            ))}
+        </ScrollView>
+      </View>
       <View>
-        {postsLoading && (
-          <ActivityIndicator animating={postsLoading} size="large" />
-        )}
-        {posts?.map((item, index) => (
-          <View key={index}>
-            <Post post={item} index={index} />
-          </View>
-        ))}
+        {posts
+          ?.filter(post => post.priority === false)
+          .map((item, index) => (
+            <View key={index}>
+              <Post post={item} index={index} />
+            </View>
+          ))}
       </View>
     </ScrollView>
   );
@@ -119,6 +149,12 @@ const styles = StyleSheet.create({
     justifyContent: 'space-evenly',
     alignItems: 'center',
     backgroundColor: 'tomato',
+  },
+  ann: {
+    // padding: 5,
+    marginTop: 10,
+    marginBottom: 5,
+    elevation: 1,
   },
 });
 

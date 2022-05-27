@@ -16,6 +16,7 @@ import {useNavigation} from '@react-navigation/native';
 
 import {images} from '../../Global/Constants';
 import config from '../../config';
+import {navigate, navigationRef} from '../../Context/navRef';
 const AccountScreen = () => {
   const dispatcher = useDispatch();
   const navigation = useNavigation();
@@ -50,6 +51,13 @@ const AccountScreen = () => {
           onPress={() => navigation.navigate('Edit')}>
           <Text style={{color: 'black', fontSize: 17, fontWeight: 'bold'}}>
             Account Information
+          </Text>
+        </Pressable>
+        <Pressable
+          style={styles.button}
+          onPress={() => navigate('Chats', {screen: 'Profiles'})}>
+          <Text style={{color: 'black', fontSize: 17, fontWeight: 'bold'}}>
+            Profile
           </Text>
         </Pressable>
         <Pressable onPress={logout} style={styles.logout}>
@@ -98,8 +106,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'flex-start',
     padding: 10,
-    borderTopWidth: 2,
-    borderBottomWidth: 2,
+    elevation: 3,
+    borderColor: 'rgba(0,0,0,0.2)',
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
     marginVertical: 5,
     color: 'black',
     fontFamily: 'Montserrat-Regular',
