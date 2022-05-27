@@ -115,6 +115,7 @@ const DashboardScreen = () => {
         <ScrollView horizontal={true}>
           {posts
             ?.filter(post => post.priority === true)
+            .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
             .map((item, index) => (
               <View key={index}>
                 <Post post={item} index={index} />
@@ -125,6 +126,7 @@ const DashboardScreen = () => {
       <View>
         {posts
           ?.filter(post => post.priority === false)
+          .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
           .map((item, index) => (
             <View key={index}>
               <Post post={item} index={index} />

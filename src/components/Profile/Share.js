@@ -66,7 +66,6 @@ const Share = ({user, setPosts}) => {
       // let url = reader.readAsDataURL(images);
       // setReader(reader.result);
       setPostFile(images);
-      console.log(url);
     } catch (error) {
       console.log(error);
     }
@@ -76,8 +75,9 @@ const Share = ({user, setPosts}) => {
   const onChangeFileUpload = e => {
     setSelectedFiles(prev => [...prev, e.target.files[0]]);
   };
-  const removeItem = val => {
-    setSelectedFiles(prev => prev.filter(item => item.name !== val));
+  const removeItem = () => {
+    // setSelectedFiles(prev => prev.filter(item => item.name !== val));
+    setPostFile(null);
   };
   // const handleChange = () => {
   //   setContent(e.target.value);
@@ -227,15 +227,31 @@ const Share = ({user, setPosts}) => {
             })}
           </ImageList>
         </View> */}
-        <View>
-          {postFile && (
+
+        {postFile && (
+          <View
+            style={{
+              flex: 1,
+              width: '100%',
+              height: '100%',
+              position: 'relative',
+            }}>
             <Image
-              source={postFile}
-              resizeMode="contain"
-              style={{width: 300, height: 300}}
+              source={{uri: postFile?.assets[0].uri}}
+              resizeMode="stretch"
+              style={{width: 100, height: 100, borderRadius: 3}}
             />
-          )}
-        </View>
+            <Pressable
+              style={{position: 'absolute', left: 80}}
+              onPress={removeItem}>
+              <Image
+                source={require('../../assets/icons/cancel.png')}
+                style={{width: 20, height: 20}}
+              />
+            </Pressable>
+          </View>
+        )}
+
         {/* <hr className="shareHr" /> */}
         <View style={styles.shareBottom}>
           <View style={styles.shareOptions}>

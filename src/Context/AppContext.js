@@ -179,8 +179,89 @@ const ContextProvider = ({children}) => {
       setCallDeclined(true);
       setDeclineInfo(data.msg);
     });
-  }, [socket]);
+    socket.on('newPost', data => {
+      if (account.user._id !== data.senderId) {
+        saveNotificationToDB({
+          actor: data.senderId,
+          content: data.content,
+        });
+        setArrivalNotification({
+          title: 'New post',
+          sender: data.senderId,
+          content: data.content,
+          createdAt: Date.now(),
+          read: false,
+        });
+      }
 
+      // saveNotificationToDB({
+      //     actor: account.user.first_name + ' ' + account.user.last_name,
+      //     content: `${account.user.first_name} ${account.user.last_name} liked your post`
+      // });
+    });
+    socket.on('newLike', data => {
+      if (account.user._id !== data.senderId) {
+        // openNotification('New like', data.content, 'notif');
+        saveNotificationToDB({
+          actor: data.senderId,
+          content: data.content,
+        });
+        setArrivalNotification({
+          title: 'New like',
+          sender: data.senderId,
+          content: data.content,
+          createdAt: Date.now(),
+          read: false,
+        });
+      }
+    });
+  }, [socket]);
+  const emitNewPost = async (uid, priority) => {
+    // sendNotification(account.user._id, m._id, `You have been removed from the group ${res.data.name}!`);
+    try {
+      const u = await axios.get(config.API_SERVER + 'user/users/' + uid);
+      socket.emit('newPost', {
+        senderId: account.user._id,
+        content: `${u.data.first_name} ${u.data.last_name} uploaded a new ${
+          priority ? 'announcement' : 'post'
+        }!`,
+      });
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const emitNewLike = async (senderId, receiverId) => {
+    // sendNotification(account.user._id, m._id, `You have been removed from the group ${res.data.name}!`);
+    try {
+      // const u = await axios.get(config.API_SERVER + 'user/users/' + uid);
+      socket.emit('newLike', {
+        senderId,
+        receiverId: receiverId,
+        content: `${account.user.first_name} ${account.user.last_name} liked your post!`,
+      });
+    } catch (error) {
+      console.log(error);
+    }
+  };
+  const saveNotificationToDB = async props => {
+    try {
+      const u = await axios.get(
+        config.API_SERVER + 'user/users/' + props.actor,
+      );
+      try {
+        const data = {
+          title: u.data.first_name + ' ' + u.data.last_name,
+          content: props.content,
+        };
+        await axios.post(config.API_SERVER + 'notifications', data);
+      } catch (error) {
+        console.log(error);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
   const sendMessage = (senderId, receiverId, newMessage, currentChat) => {
     // sendMessageNotification(senderId, receiverId, newMessage)
     socket.emit('sendMessage', {
@@ -388,6 +469,8 @@ const ContextProvider = ({children}) => {
         userHasRoom,
         removeGroup,
         removeMessagesFromRoom,
+        emitNewPost,
+        emitNewLike,
         account,
         existInRoom,
         setExistInRoom,

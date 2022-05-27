@@ -56,7 +56,7 @@ const MessageScreen = () => {
 
   useEffect(() => {
     return () => {
-      setCurrentChat(null) && navigation.navigate('Chats');
+      navigation.navigate('Chats') && setCurrentChat(null);
     };
   }, []);
   useEffect(() => {
@@ -249,6 +249,7 @@ const MessageScreen = () => {
 
       setSendIsLoading(true);
       const res = await axios.post(config.API_SERVER + 'messages', message);
+      console.log(res.data);
       setMessages([...messages, res.data]);
       setNewMessage('');
       // try {

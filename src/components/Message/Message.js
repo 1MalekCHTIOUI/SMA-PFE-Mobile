@@ -21,7 +21,6 @@ const Message = ({message, own, type}) => {
       const res = await axios.get(
         config.API_SERVER + 'user/users/' + message.sender,
       );
-      console.log(res.data);
       setUser(res.data);
     } catch (error) {
       console.log(error);
@@ -29,7 +28,7 @@ const Message = ({message, own, type}) => {
   };
   useEffect(() => {
     getUser();
-  }, []);
+  }, [message]);
   // useEffect(() => {
   //   user && console.log(user);
   // }, [user]);
@@ -123,6 +122,7 @@ const styles = StyleSheet.create({
     borderRadius: 2,
     alignSelf: 'flex-start',
     marginTop: 5,
+    elevation: 0.5,
   },
   ownMessageContainer: {
     justifyContent: 'center',
@@ -133,6 +133,7 @@ const styles = StyleSheet.create({
     borderRadius: 7,
     alignSelf: 'flex-end',
     marginTop: 5,
+    elevation: 1,
   },
   text: {
     color: 'white',
@@ -142,6 +143,7 @@ const styles = StyleSheet.create({
     marginTop: 5,
     marginBottom: 5,
     fontSize: 13,
+    color: 'rgba(0,0,0,0.4)',
   },
   overlay: {
     flex: 1,

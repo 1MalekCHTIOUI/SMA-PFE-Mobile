@@ -61,8 +61,7 @@ const styles = StyleSheet.create({
   item: {
     marginLeft: 15,
     height: '100%',
-    justifyContent: 'center',
-    alignItems: 'center',
+    width: '100%',
   },
   itemText: {
     fontSize: 12,
@@ -72,22 +71,12 @@ const styles = StyleSheet.create({
   },
   circleborder: {
     overflow: 'hidden',
-    borderWidth: 2,
-    width: 70,
-    height: 70,
+    borderWidth: 1,
+    width: 40,
+    height: 40,
     borderRadius: 150,
     borderColor: 'white',
-    tintColor: 'rgba(0,0,0,0.1)',
-  },
-  dot: {
-    position: 'absolute',
-    height: 15,
-    width: 15,
-    borderRadius: 50,
-    top: 50,
-    borderWidth: 1,
-    borderColor: 'white',
-    left: 50,
+    tintColor: 'white',
   },
 });
 
