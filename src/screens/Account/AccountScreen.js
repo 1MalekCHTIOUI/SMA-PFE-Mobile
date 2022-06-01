@@ -20,14 +20,10 @@ import {navigate, navigationRef} from '../../Context/navRef';
 const AccountScreen = () => {
   const dispatcher = useDispatch();
   const navigation = useNavigation();
-  const {account, profilePicture} = useContext(AppContext);
+  const {account} = useContext(AppContext);
   const logout = () => {
     dispatcher({type: LOGOUT});
   };
-  useEffect(() => {
-    console.log(URI);
-  }, []);
-  const URI = '../../../public/uploads/profilePictures/1920x1536391207338.jpg';
 
   return (
     <SafeAreaView style={styles.container}>
@@ -55,7 +51,7 @@ const AccountScreen = () => {
         </Pressable>
         <Pressable
           style={styles.button}
-          onPress={() => navigate('Chats', {screen: 'Profiles'})}>
+          onPress={() => navigate('userProfile', {user: account.user})}>
           <Text style={{color: 'black', fontSize: 17, fontWeight: 'bold'}}>
             Profile
           </Text>

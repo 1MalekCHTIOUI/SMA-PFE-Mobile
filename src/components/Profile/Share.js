@@ -9,7 +9,7 @@ import {
   ActivityIndicator,
   TouchableOpacity,
 } from 'react-native';
-
+import Video from 'react-native-video';
 import config from '../../config';
 import {launchImageLibrary} from 'react-native-image-picker';
 
@@ -28,6 +28,12 @@ const options = {
     mediaType: 'photo',
     includeBase64: false,
   },
+};
+const options2 = {
+  title: 'Select video',
+  mediaType: 'video',
+  path: 'video',
+  quality: 1,
 };
 const Divider = () => {
   return (
@@ -61,37 +67,35 @@ const Share = ({user, setPosts}) => {
   const [postFile, setPostFile] = React.useState(null);
   const [reader, setReader] = React.useState([]);
 
-  const handleClick = async () => {
+  const handleClick = async type => {
     try {
-      const images = await launchImageLibrary(options);
-      // let reader = new FileReader();
-      // let url = reader.readAsDataURL(images);
-      // setReader(reader.result);
-      setPostFile(images);
+      console.log(type);
+      const images = await launchImageLibrary(
+        type === 'video' ? options2 : options,
+      );
+      if (images.didCancel) {
+        setPostFile(null);
+      } else {
+        setPostFile(images);
+      }
     } catch (error) {
       console.log(error);
     }
   };
-  const [selectedFiles, setSelectedFiles] = React.useState([]);
+  // const [selectedFiles, setSelectedFiles] = React.useState([]);
 
-  const onChangeFileUpload = e => {
-    setSelectedFiles(prev => [...prev, e.target.files[0]]);
-  };
+  // const onChangeFileUpload = e => {
+  //   setSelectedFiles(prev => [...prev, e.target.files[0]]);
+  // };
   const removeItem = () => {
     // setSelectedFiles(prev => prev.filter(item => item.name !== val));
     setPostFile(null);
   };
-  // const handleChange = () => {
-  //   setContent(e.target.value);
-  // };
 
-  React.useEffect(() => {
-    console.log(content);
-  }, [content]);
   const [posting, setPosting] = React.useState(false);
   const submitPost = async () => {
-    const formData = new FormData();
     if (content === '' && postFile === null) return;
+    const formData = new FormData();
     setPosting(true);
     const post = {
       userId: account.user._id,
@@ -102,41 +106,51 @@ const Share = ({user, setPosts}) => {
       post.content = content;
     }
     if (postFile !== null) {
-      formData.append('file', {
-        uri: postFile.assets[0].uri,
-        type: postFile.assets[0].type,
-        name: postFile.assets[0].fileName,
-      });
+      console.log(postFile);
+      if (postFile.assets[0].type.includes('video/mp4')) {
+        const name = postFile.assets[0].fileName + '.mp4';
+        formData.append('file', {
+          uri: postFile.assets[0].uri,
+          type: postFile.assets[0].type,
+          name: name,
+        });
+      } else {
+        formData.append('file', {
+          uri: postFile.assets[0].uri,
+          type: postFile.assets[0].type,
+          name: postFile.assets[0].fileName,
+        });
+      }
     }
 
     try {
+      if (postFile !== null) {
+        const response = await axios.post(
+          config.API_SERVER + 'upload',
+          formData,
+          {headers: {'Content-Type': 'multipart/form-data'}},
+        );
+        post.attachment = [
+          {
+            displayName: postFile.assets[0].fileName,
+            actualName: response.data.upload,
+          },
+        ];
+      }
+      console.log(post);
       try {
-        if (postFile !== null) {
-          const response = await axios.post(
-            config.API_SERVER + 'upload',
-            formData,
-            {headers: {'Content-Type': 'multipart/form-data'}},
-          );
-          post.attachment = [
-            {
-              displayName: postFile.assets[0].fileName,
-              actualName: response.data.upload,
-            },
-          ];
-        }
         console.log(post);
+        const res = await axios.post(config.API_SERVER + 'posts', post);
+        emitNewPost(account.user._id, post.priority);
+        setPosts(prev => [...prev, res.data]);
+        setPosting(false);
       } catch (error) {
         setPosting(false);
-        console.log(error);
+        console.log(error.message);
       }
-
-      const res = await axios.post(config.API_SERVER + 'posts', post);
-      emitNewPost(account.user._id, post.priority);
-      setPosts(prev => [...prev, res.data]);
-      setPosting(false);
     } catch (error) {
       setPosting(false);
-      console.log(error.message);
+      console.log(error);
     }
   };
   return (
@@ -192,7 +206,7 @@ const Share = ({user, setPosts}) => {
             resizeMode="contain"
             source={
               user.profilePicture
-                ? {uri: config.HOST + `public/uploads/${user.profilePicture}`}
+                ? {uri: config.CONTENT + user.profilePicture}
                 : require('../../assets/images/user.png')
             }
             alt=""
@@ -206,29 +220,6 @@ const Share = ({user, setPosts}) => {
           />
         </View>
         <Divider />
-        {/* <View className="shareMiddle">
-          <ImageList sx={{width: '100%'}} rowHeight={164} cols={3}>
-            {selectedFiles?.map((item, i) => {
-              return (
-                <ImageListItem key={i}>
-                  {(item.name.includes('.png') ||
-                    item.name.includes('.jpg')) && (
-                    <View className="uploadedImageContainer">
-                      <Close
-                        className="close"
-                        onClick={() => removeItem(item.name)}
-                      />
-                      <img
-                        className="uploadedImage"
-                        src={`${URL.createObjectURL(item)}`}
-                      />
-                    </View>
-                  )}
-                </ImageListItem>
-              );
-            })}
-          </ImageList>
-        </View> */}
 
         {postFile && (
           <View
@@ -238,11 +229,21 @@ const Share = ({user, setPosts}) => {
               height: '100%',
               position: 'relative',
             }}>
-            <Image
-              source={{uri: postFile?.assets[0].uri}}
-              resizeMode="stretch"
-              style={{width: 100, height: 100, borderRadius: 3}}
-            />
+            {postFile?.assets[0].fileName.includes('.png') ||
+              (postFile?.assets[0].fileName.includes('.jpg') && (
+                <Image
+                  source={{uri: postFile?.assets[0].uri}}
+                  resizeMode="stretch"
+                  style={{width: 100, height: 100, borderRadius: 3}}
+                />
+              ))}
+            {postFile?.assets[0].fileName.includes('.mp4') && (
+              <Video
+                source={{uri: postFile?.assets[0].uri}}
+                resizeMode="stretch"
+                style={styles.backgroundVideo}
+              />
+            )}
             <Pressable
               style={{position: 'absolute', left: 80}}
               onPress={removeItem}>
@@ -257,7 +258,7 @@ const Share = ({user, setPosts}) => {
         {/* <hr className="shareHr" /> */}
         <View style={styles.shareBottom}>
           <View style={styles.shareOptions}>
-            <TouchableOpacity text="send" onPress={handleClick}>
+            <TouchableOpacity text="send" onPress={() => handleClick('image')}>
               <Image
                 style={{
                   height: 30,
@@ -269,6 +270,7 @@ const Share = ({user, setPosts}) => {
                 resizeMode="contain"
               />
             </TouchableOpacity>
+
             {/* <View className="shareOption">
               <Text htmlColor="blue" className="shareIcon" />
               <Text className="shareOptionText">Tag</Text>
@@ -282,6 +284,18 @@ const Share = ({user, setPosts}) => {
               <span className="shareOptionText">Feelings</span>
             </View> */}
           </View>
+          <TouchableOpacity text="send" onPress={() => handleClick('video')}>
+            <Image
+              style={{
+                height: 30,
+                width: 30,
+                marginLeft: 10,
+                marginVertical: 20,
+              }}
+              source={require('../../assets/icons/video-camera-filled.png')}
+              resizeMode="contain"
+            />
+          </TouchableOpacity>
           <TouchableOpacity
             disabled={posting}
             style={styles.shareButton}
@@ -301,6 +315,15 @@ const Share = ({user, setPosts}) => {
 export default Share;
 
 const styles = StyleSheet.create({
+  backgroundVideo: {
+    position: 'absolute',
+    width: '100%',
+    height: '100%',
+    top: 0,
+    left: 0,
+    bottom: 0,
+    right: 0,
+  },
   share: {
     flex: 1,
     display: 'flex',
@@ -356,7 +379,6 @@ const styles = StyleSheet.create({
     width: 50,
     height: 50,
     borderRadius: 50,
-    backgroundColor: 'gray',
     borderWidth: 1,
     borderColor: 'black',
   },

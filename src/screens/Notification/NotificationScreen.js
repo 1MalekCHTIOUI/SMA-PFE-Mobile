@@ -6,7 +6,9 @@ import {
   Text,
   ActivityIndicator,
   ScrollView,
+  TouchableOpacity,
 } from 'react-native';
+import CustomButton from '../../components/CustomButton';
 import Notification from '../../components/Notification';
 import config from '../../config';
 import {AppContext} from '../../Context/AppContext';
@@ -30,6 +32,16 @@ const NotificationScreen = () => {
   useEffect(() => {
     getNotifications();
   }, []);
+  const deleteNotifications = async () => {
+    try {
+      await axios.delete(
+        config.API_SERVER + 'notifications/' + account.user._id,
+      );
+      setNotifications([]);
+    } catch (error) {
+      console.log(error);
+    }
+  };
   return (
     <View style={styles.container}>
       <ActivityIndicator animating={loading} />
@@ -42,6 +54,14 @@ const NotificationScreen = () => {
           }}>
           Notifications: {notifications.length}
         </Text>
+      </View>
+      <View>
+        {notifications.length > 0 && (
+          <CustomButton
+            text="Delete notifications"
+            onPress={deleteNotifications}
+          />
+        )}
       </View>
       <ScrollView>
         {notifications?.map(n => (

@@ -47,6 +47,13 @@ export default function Routes() {
       <SettingsStack.Navigator>
         <SettingsStack.Screen name="Settings" component={Account} />
         <SettingsStack.Screen name="Edit" component={EditAccount} />
+        <SettingsStack.Screen
+          name="userProfile"
+          options={{
+            headerShown: false,
+          }}
+          component={Profile}
+        />
       </SettingsStack.Navigator>
     );
   };

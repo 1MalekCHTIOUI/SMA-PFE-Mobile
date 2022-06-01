@@ -118,23 +118,6 @@ const MessageScreen = () => {
           },
           headerTitleAlign: 'center',
           headerShown: true,
-          headerRight: () => (
-            <TouchableOpacity
-              text="send"
-              onPress={() => handleCallButton(currentChatUser._id)}>
-              <Image
-                style={{
-                  height: 25,
-                  width: 25,
-                  marginVertical: 20,
-                  marginRight: 20,
-                  tintColor: '#3B71F3',
-                }}
-                source={require('../../assets/images/phone-call.png')}
-                resizeMode="contain"
-              />
-            </TouchableOpacity>
-          ),
         });
       currentChat?.type === 'PUBLIC' &&
         navigation.setOptions({

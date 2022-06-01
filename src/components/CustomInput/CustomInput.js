@@ -8,6 +8,7 @@ const CustomInput = ({value, setValue, placeholder, secureTextEntry}) => {
         value={value}
         onChangeText={setValue}
         placeholder={placeholder}
+        placeholderTextColor="rgba(0,0,0,0.3)"
         style={styles.input}
         secureTextEntry={secureTextEntry}
       />

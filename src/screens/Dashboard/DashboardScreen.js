@@ -33,17 +33,15 @@ const DashboardScreen = () => {
     onlineUsers?.map(async item => {
       try {
         setUsersLoading(true);
-        const users = await axios.get(
-          config.API_SERVER + 'user/users/' + item.userId,
-        );
-        onliners.find(u => u._id === users.data._id) === undefined &&
-          setOnliners(prev => [...prev, users.data]);
+
+        setOnliners(prev => [...prev, item.user]);
         setUsersLoading(false);
       } catch (error) {
         setUsersLoading(false);
         console.log(error);
       }
     });
+    // setOnliners(onlineIsers1)
   };
   React.useEffect(() => {
     getOnlineUsers();

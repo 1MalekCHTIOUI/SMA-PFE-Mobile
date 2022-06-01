@@ -14,7 +14,9 @@ const ProfileContent = ({user}) => {
     try {
       setPostsLoading(true);
       const res = await axios.get(config.API_SERVER + 'posts/' + user._id);
-      setPosts(res.data);
+      setPosts(
+        res.data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)),
+      );
       setPostsLoading(false);
     } catch (error) {
       setPostsLoading(false);
@@ -26,7 +28,7 @@ const ProfileContent = ({user}) => {
   }, []);
   return (
     <View style={styles.content}>
-      <Share user={user} />
+      <Share user={user} setPosts={setPosts} />
       <View style={styles.postsWrapper}>
         {posts &&
           postsLoading === false &&

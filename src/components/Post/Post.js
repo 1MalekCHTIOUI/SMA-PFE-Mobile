@@ -17,6 +17,7 @@ import {
   TouchableOpacity,
   Pressable,
 } from 'react-native';
+import Video from 'react-native-video';
 import likeImage from '../../assets/icons/like.png';
 
 // import {Collapse, Grid, TextField, Typography} from '@material-ui/core';
@@ -200,6 +201,7 @@ const Post = ({post, index}) => {
   // const itemsToShow = comments
   //   ?.slice(0, numberOfitemsShown)
   //   .map(comment => <Comment comment={comment} />);
+  const player = useRef();
   return (
     <View
       style={[styles.post, post.priority === true && {width: 300}]}
@@ -232,7 +234,11 @@ const Post = ({post, index}) => {
             </View>
           </View>
           <View style={styles.postTopRight}>
-            <Text>{post.visibility ? 'Public' : 'Private'}</Text>
+            {post.userId === account.user._id && (
+              <Text style={{color: 'black'}}>
+                {post.visibility ? 'Public' : 'Private'}
+              </Text>
+            )}
             {/* <MoreVert /> */}
           </View>
         </View>
@@ -242,12 +248,33 @@ const Post = ({post, index}) => {
           {post?.attachment.length > 0 &&
             post?.attachment.map(f => (
               <View style={styles.imageContainer}>
-                <Image
-                  style={styles.postImg}
-                  source={{uri: config.CONTENT + f.actualName}}
-                  resizeMode="stretch"
-                  alt="loading..."
-                />
+                {f.actualName.includes('.png') ||
+                  (f.actualName.includes('.jpg') && (
+                    <Image
+                      style={styles.postImg}
+                      source={{uri: config.CONTENT + f.actualName}}
+                      resizeMode="stretch"
+                      alt="loading..."
+                    />
+                  ))}
+                {f.actualName.includes('.mp4') && (
+                  <Video
+                    autoplay={false}
+                    ref={ref => {
+                      player.current = ref;
+                    }}
+                    source={{uri: config.VIDEO_CONTENT + f.actualName}}
+                    style={styles.backgroundVideo}
+                  />
+                )}
+                {f.actualName.includes('.pdf') && (
+                  <TouchableOpacity>
+                    <Text>{f.displayName}</Text>
+                    <Image
+                      source={require('../../assets/images/google-docs.png')}
+                    />
+                  </TouchableOpacity>
+                )}
               </View>
             ))}
 
@@ -314,7 +341,7 @@ const Post = ({post, index}) => {
               <Text style={{color: 'black'}}>Post</Text>
             </TouchableOpacity>
           </View>
-          {comments.map((comment, index) => (
+          {comments?.map((comment, index) => (
             <View key={index}>
               <Comment comment={comment} />
             </View>
@@ -345,6 +372,15 @@ const styles = StyleSheet.create({
 
     // boxShadow: '0px 0px 16px -8px rgba(0, 0, 0, 0.68)',
     padding: 10,
+  },
+  backgroundVideo: {
+    position: 'absolute',
+    width: '100%',
+    height: '100%',
+    top: 0,
+    left: 0,
+    bottom: 0,
+    right: 0,
   },
   postWrapper: {
     borderRadius: 5,
