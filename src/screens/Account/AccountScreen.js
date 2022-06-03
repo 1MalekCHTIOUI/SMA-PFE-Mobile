@@ -1,4 +1,4 @@
-import React, {useContext, useEffect} from 'react';
+import React, {useContext, useEffect, useState} from 'react';
 import {
   View,
   StyleSheet,
@@ -8,7 +8,7 @@ import {
   Image,
 } from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
-import {useDispatch} from 'react-redux';
+import {useDispatch, useSelector} from 'react-redux';
 import CustomButton from '../../components/CustomButton';
 import {AppContext} from '../../Context/AppContext';
 import {LOGOUT} from '../../redux/actions';
@@ -17,6 +17,7 @@ import {useNavigation} from '@react-navigation/native';
 import {images} from '../../Global/Constants';
 import config from '../../config';
 import {navigate, navigationRef} from '../../Context/navRef';
+import axios from 'axios';
 const AccountScreen = () => {
   const dispatcher = useDispatch();
   const navigation = useNavigation();
@@ -24,6 +25,20 @@ const AccountScreen = () => {
   const logout = () => {
     dispatcher({type: LOGOUT});
   };
+  const [user, setUser] = useState({});
+  useEffect(() => {
+    const getUser = async () => {
+      try {
+        const res = await axios.get(
+          config.API_SERVER + 'user/users/' + account.user._id,
+        );
+        setUser(res.data);
+      } catch (error) {
+        console.log(error);
+      }
+    };
+    getUser();
+  }, []);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -51,7 +66,7 @@ const AccountScreen = () => {
         </Pressable>
         <Pressable
           style={styles.button}
-          onPress={() => navigate('userProfile', {user: account.user})}>
+          onPress={() => navigate('userProfile', {user: user})}>
           <Text style={{color: 'black', fontSize: 17, fontWeight: 'bold'}}>
             Profile
           </Text>

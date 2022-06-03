@@ -97,6 +97,21 @@ const RoomScreen = ({setCurrentChat}) => {
       </View>
     );
   };
+  const noGroups = () => {
+    return (
+      <View style={{marginLeft: 140, justifyContent: 'center'}}>
+        <Text
+          style={{
+            fontSize: 15,
+            fontWeight: 'bold',
+            fontFamily: 'Montserrat-Regular',
+            textAlign: 'center',
+          }}>
+          You have no groups!
+        </Text>
+      </View>
+    );
+  };
 
   return (
     <SafeAreaView style={styles.MainContainer}>
@@ -146,7 +161,7 @@ const RoomScreen = ({setCurrentChat}) => {
           }
           keyExtractor={item => item.id}
           horizontal={true}
-          ListEmptyComponent={noUsers}
+          ListEmptyComponent={filter ? noUsers : noGroups}
           // ListHeaderComponent={FlatList_Header}
         />
       </View>

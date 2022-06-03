@@ -6,6 +6,7 @@ import {AppContext} from '../../Context/AppContext';
 import {capitalizeFirstLetter, replaceDash} from '../../utils/scripts';
 import moment from 'moment';
 const ProfileHeader = ({user}) => {
+  console.log(user);
   // const {account} = useContext(AppContext);
   return (
     <View style={styles.header}>
@@ -19,11 +20,17 @@ const ProfileHeader = ({user}) => {
         )} */}
       </View>
       <View style={styles.profileContainer}>
-        {user.profilePicture && (
+        {user.profilePicture ? (
           <Image
             style={styles.profileImage}
             resizeMode="contain"
             source={{uri: config.CONTENT + user.profilePicture}}
+          />
+        ) : (
+          <Image
+            style={styles.profileImage}
+            resizeMode="contain"
+            source={require('../../assets/images/user.png')}
           />
         )}
       </View>
@@ -32,7 +39,7 @@ const ProfileHeader = ({user}) => {
         <Text style={styles.last}>{user.last_name}</Text>
       </View>
       <View style={{display: 'flex'}}>
-        <Text style={styles.service}>{user.service.toLowerCase()}</Text>
+        <Text style={styles.service}>{user?.service?.toLowerCase()}</Text>
         <Text style={styles.service}>
           {moment().format('DD/MM/YYYY', user.createdAt)}
         </Text>

@@ -323,14 +323,16 @@ const ChatScreen = () => {
     }
   };
   const [show, setShow] = useState(false);
+  const [selectedUser, setSelectedUser] = useState({});
   const clean = () => {
     setGroupName('');
     setSelectedUsers([]);
     setShow(false);
   };
-  const handlePickerChange = val => {
+  const handlePickerChange = (val, index) => {
+    console.log(val);
+    if (!val) return;
     if (selectedUsers.length > 0) {
-      console.log('ARRAY NOT EMPTY');
       selectedUsers?.map(item => {
         console.log(item._id + '   ' + val._id);
         if (item._id !== val._id) {
@@ -340,10 +342,10 @@ const ChatScreen = () => {
       });
     }
     if (selectedUsers.length === 0) {
-      console.log('PUSH EMPTY');
       setSelectedUsers([val]);
     }
   };
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -369,34 +371,43 @@ const ChatScreen = () => {
             }}>
             <View style={styles.overlay}>
               <View style={styles.modalContent}>
-                <View>
-                  {selectedUsers.length > 0 &&
-                    selectedUsers.map(item => (
-                      <Text style={{color: 'white'}}>
-                        {item?.first_name} {item?.last_name}
-                      </Text>
-                    ))}
-                </View>
+                <ScrollView style={{height: 10}}>
+                  {selectedUsers?.map(item => (
+                    <Text style={{color: 'white'}}>
+                      {item?.first_name} {item?.last_name}
+                    </Text>
+                  ))}
+                </ScrollView>
+
                 <View>
                   <TextInput
                     style={styles.input}
                     placeholder="Group name"
+                    placeholderTextColor="rgba(0,0,0,0.5)"
                     value={groupName}
                     onChangeText={setGroupName}
                   />
                 </View>
                 <Picker
                   style={styles.picker}
-                  selectedValue={'SELECT'}
-                  onValueChange={(itemValue, itemIndex) =>
-                    handlePickerChange(itemValue)
-                  }>
+                  placeholder="select group"
+                  placeholderTextColor="black"
+                  selectedValue={selectedUser}
+                  onValueChange={(val, index) => {
+                    if (!val) {
+                      return;
+                    }
+                    setSelectedUsers(prev => [...prev, val]);
+                    setSelectedUser(val);
+                  }}>
+                  <Picker.Item label="Select a value..." value="" />
                   {users
                     ?.filter(user => user._id !== account.user._id)
                     .map(item => {
                       // if (groupMembers.some(m => m._id !== item._id)) {
                       return (
                         <Picker.Item
+                          style={{color: 'black'}}
                           label={item.first_name + ' ' + item.last_name}
                           value={item}
                         />
@@ -529,7 +540,7 @@ const styles = StyleSheet.create({
     height: 50,
     width: '70%',
     backgroundColor: 'white',
-    color: 'white',
+    color: 'rgba(0,0,0,0.5)',
     textAlign: 'center',
     borderRadius: 10,
   },

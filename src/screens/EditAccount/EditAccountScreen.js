@@ -32,7 +32,6 @@ const options = {
 };
 const EditAccoutScreen = () => {
   const {user} = useSelector(s => s.account);
-  console.log(user);
   const dispatcher = useDispatch();
   const [firstName, setFirstName] = useState(user.first_name);
   const [lastName, setLastName] = useState(user.last_name);
