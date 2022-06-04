@@ -137,6 +137,7 @@ const ChatScreen = () => {
   }, [rooms]);
   useEffect(() => {
     if (messageSent) {
+      setPrivateRooms([]);
       getPrivateRooms();
       // getLastRoomMessage();
       setMessageSent(false);
