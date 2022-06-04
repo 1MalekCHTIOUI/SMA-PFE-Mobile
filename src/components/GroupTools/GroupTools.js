@@ -37,6 +37,7 @@ const GroupTools = ({group}) => {
     removeGroup,
     removeMessagesFromRoom,
     setIsChanged,
+    exitGroup,
   } = useContext(AppContext);
   const [type, setType] = useState('');
   const [status, setStatus] = useState(0);
@@ -62,8 +63,8 @@ const GroupTools = ({group}) => {
       members.data.members?.map(async m => {
         try {
           if (
-            account.user._id !== m &&
-            groupMembers.some(u => u._id !== m._id)
+            account.user._id !== m.userId &&
+            groupMembers.some(u => u._id !== m.userId)
           ) {
             const member = await axios.get(
               config.API_SERVER + 'user/users/' + m,
@@ -96,7 +97,23 @@ const GroupTools = ({group}) => {
     console.log(users);
     // setGroupMembers(groupMembers.filter(m => selectedUser.includes(m._id)));
   };
-
+  const handleExitGroup = () => {
+    // removeGroup(group)
+    Alert.alert('Please confirm', `Are you sure you leave ${group.name}`, [
+      {
+        text: 'Cancel',
+        onPress: () => console.log('cancel'),
+        style: 'cancel',
+      },
+      {
+        text: 'OK',
+        onPress: () => {
+          exitGroup(group, account.user);
+          navigation.navigate('Chats');
+        },
+      },
+    ]);
+  };
   const handleRemoveGroup = () => {
     // removeGroup(group)
     Alert.alert(
@@ -180,30 +197,50 @@ const GroupTools = ({group}) => {
   return (
     <View style={styles.container}>
       <View style={styles.items}>
-        <TouchableOpacity onPress={addMember} style={styles.pressable}>
-          <Image
-            style={{height: 30, width: 30, tintColor: '#ff3f5b'}}
-            source={require('../../assets/icons/add.png')}
-          />
-        </TouchableOpacity>
+        {account.user?.role[0] !== 'USER' && (
+          <TouchableOpacity onPress={addMember} style={styles.pressable}>
+            <Image
+              style={{height: 30, width: 30, tintColor: '#ff3f5b'}}
+              source={require('../../assets/icons/add.png')}
+            />
+          </TouchableOpacity>
+        )}
 
-        <Divider />
+        {account.user?.role[0] !== 'USER' && <Divider />}
 
-        <TouchableOpacity onPress={handleRemoveGroup} style={styles.pressable}>
-          <Image
-            style={{height: 30, width: 30}}
-            source={require('../../assets/images/trash-bin.png')}
-          />
-        </TouchableOpacity>
-        <Divider />
-        <TouchableOpacity onPress={removeMember} style={styles.pressable}>
+        {account.user?.role[0] !== 'USER' && (
+          <TouchableOpacity
+            onPress={handleRemoveGroup}
+            style={styles.pressable}>
+            <Image
+              style={{height: 30, width: 30}}
+              source={require('../../assets/images/trash-bin.png')}
+            />
+          </TouchableOpacity>
+        )}
+        {account.user?.role[0] !== 'USER' && <Divider />}
+        {account.user?.role[0] !== 'USER' && (
+          <TouchableOpacity onPress={removeMember} style={styles.pressable}>
+            <Image
+              style={{
+                height: 15,
+                width: 15,
+                tintColor: '#ff3f5b',
+              }}
+              source={require('../../assets/icons/cancel.png')}
+            />
+          </TouchableOpacity>
+        )}
+        {account.user?.role[0] !== 'USER' && <Divider />}
+
+        <TouchableOpacity onPress={handleExitGroup} style={styles.pressable}>
           <Image
             style={{
-              height: 15,
-              width: 15,
+              height: 30,
+              width: 30,
               tintColor: '#ff3f5b',
             }}
-            source={require('../../assets/icons/cancel.png')}
+            source={require('../../assets/icons/backspace.png')}
           />
         </TouchableOpacity>
       </View>

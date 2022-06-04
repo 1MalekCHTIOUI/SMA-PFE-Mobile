@@ -77,7 +77,7 @@ const User = ({user, online}) => {
                   }
                   style={[
                     styles.circleborder,
-                    user.profilePicture === undefined && {tintColor: 'white'},
+                    !user.profilePicture && {tintColor: 'white'},
                   ]}
                 />
               </View>
@@ -96,6 +96,7 @@ const User = ({user, online}) => {
               onSelect={() => navigation.navigate('Profiles', {user: user})}>
               <Text style={{color: 'black'}}>Profile</Text>
             </MenuOption>
+
             <MenuOption onSelect={() => userHasRoom(user)}>
               <Text style={{color: 'black'}}>Message</Text>
             </MenuOption>

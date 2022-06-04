@@ -1,5 +1,5 @@
 export const capitalizeFirstLetter = string => {
-  const s = replaceDash(string);
+  const s = string.replace('_', ' ');
   return s
     ?.toLowerCase()
     .split(' ')

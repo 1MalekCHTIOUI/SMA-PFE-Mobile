@@ -8,6 +8,7 @@ import {
   SafeAreaView,
   TouchableOpacity,
   Image,
+  Pressable,
 } from 'react-native';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
 import {AppContext} from '../../Context/AppContext';
@@ -34,8 +35,10 @@ const MessageScreen = () => {
     messagesLoading,
     sendMessage,
     handleCallButton,
+    adminMessage,
     currentChatUser,
     account,
+    setMessageSent,
   } = useContext(AppContext);
   const [newMessage, setNewMessage] = useState('');
   const scrollRef = useRef();
@@ -53,6 +56,12 @@ const MessageScreen = () => {
       setMessages(prev => [...prev, arrivalMessage]);
     }
   }, [arrivalMessage]);
+  React.useEffect(() => {
+    console.log(adminMessage);
+    adminMessage &&
+      currentChat?._id === adminMessage.currentChat &&
+      setMessages(prev => [...prev, adminMessage]);
+  }, [adminMessage]);
 
   useEffect(() => {
     return () => {
@@ -172,26 +181,14 @@ const MessageScreen = () => {
   // }
   const [file, setFile] = React.useState('');
   const [selectedFiles, setSelectedFiles] = React.useState([]);
-  // const onChangeFileUpload = e => {
-  //     setSelectedFiles(prev => [...prev, e.target.files[0]])
-  //     setFile(prev => [...prev, e.target.files[0]])
 
-  // }
-  // const handleDocumentSelection = useCallback(async () => {
-  //     try {
-  //       const response = await DocumentPicker.pick({
-  //         presentationStyle: 'fullScreen',
-  //       });
-  //       setFile(response);
-  //     } catch (err) {
-  //       console.warn(err);
-  //     }
-  //   }, []);
   const handleSubmit = async e => {
     e.preventDefault();
     const formData = new FormData();
     if (newMessage === '' && commentFile === null) return;
-    const receiverId = currentChat.members.find(m => m !== account.user._id);
+    const receiverId = currentChat.members.find(
+      m => m.userId !== account.user._id,
+    );
     const message = {
       roomId: currentChat._id,
       sender: account.user._id,
@@ -199,7 +196,7 @@ const MessageScreen = () => {
       attachment: [],
       read: {
         [account.user._id]: true,
-        [receiverId]: false,
+        [receiverId.userID]: false,
       },
     };
     if (commentFile !== null) {
@@ -235,6 +232,7 @@ const MessageScreen = () => {
       console.log(res.data);
       setMessages([...messages, res.data]);
       setNewMessage('');
+      setMessageSent(true);
       // try {
       //     if(message.attachment.length>0){
       //         await axios.post(config.API_SERVER+"upload/file", formData, {
@@ -245,7 +243,13 @@ const MessageScreen = () => {
       //     console.log(error.response.data.message);
       // }
       setSendIsLoading(false);
-      sendMessage(message.sender, receiverId, newMessage, currentChat?._id);
+      sendMessage(
+        message.sender,
+        receiverId.userId,
+        newMessage,
+        currentChat._id,
+        message.attachment,
+      );
     } catch (error) {
       setSendIsLoading(false);
       console.log(error);
@@ -270,9 +274,14 @@ const MessageScreen = () => {
     try {
       const images = await launchImageLibrary(options);
       setCommentFile(images);
+      console.log(images);
     } catch (error) {
       console.log(error);
     }
+  };
+  const removeItem = () => {
+    // setSelectedFiles(prev => prev.filter(item => item.name !== val));
+    setCommentFile(null);
   };
   return (
     <SafeAreaView style={styles.mainContainer}>
@@ -320,6 +329,23 @@ const MessageScreen = () => {
               ))}
             </ScrollView>
           ) : null}
+          {commentFile && (
+            <View style={{width: 100, height: 100, position: 'relative'}}>
+              <Image
+                source={{uri: commentFile.assets[0].uri}}
+                style={{width: 100, height: 100}}
+              />
+              <Pressable
+                style={{position: 'absolute', left: 100}}
+                onPress={removeItem}>
+                <Image
+                  source={require('../../assets/icons/cancel.png')}
+                  style={{width: 20, height: 20}}
+                />
+              </Pressable>
+            </View>
+          )}
+
           <View style={styles.send}>
             {/* <KeyboardAwareScrollView style={styles.send}> */}
             <View style={styles.input}>
@@ -350,9 +376,9 @@ const MessageScreen = () => {
                   width: 30,
                   marginLeft: 10,
                   marginVertical: 20,
-                  tintColor: 'tomato',
+                  // tintColor: 'tomato',
                 }}
-                source={require('../../assets/images/file.png')}
+                source={require('../../assets/images/picture.png')}
                 resizeMode="contain"
               />
             </TouchableOpacity>

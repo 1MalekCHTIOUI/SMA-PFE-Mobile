@@ -6,7 +6,9 @@ import {ActivityIndicator, Alert, View} from 'react-native';
 import {io} from 'socket.io-client';
 // import {useNavigation} from '@react-navigation/native';
 // import {uuid} from 'uuidv4';
-import {navigate} from './navRef';
+import {navigate, navigationRef} from './navRef';
+// import {useNavigation} from '@react-navigation/native';
+
 const AppContext = createContext();
 
 const ContextProvider = ({children}) => {
@@ -46,7 +48,7 @@ const ContextProvider = ({children}) => {
     // const LOGO = require('/public/uploads/profilePictures/'+account.user.profilePicture)
     if (account.token) {
       // setProfilePicture(LOGO)
-      socket.emit('addUser', account?.user._id);
+      socket.emit('addUser', {userId: account.user._id, user: account.user});
     }
   }, [account]);
 
@@ -79,19 +81,94 @@ const ContextProvider = ({children}) => {
     });
     setROOM_ID(uid);
   };
+  const sendNotification = async (sender, to, message) => {
+    try {
+      const data = {
+        title: 'Group',
+        userId: to,
+        sender: sender,
+        content: message,
+      };
+      await axios.post(config.API_SERVER + 'notifications', data);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+  const exitGroup = async (currentChat, user) => {
+    try {
+      try {
+        await axios.put(
+          config.API_SERVER +
+            `rooms/removeGroupMember/${currentChat._id}/${user._id}`,
+        );
+
+        try {
+          const data = {
+            roomId: currentChat._id,
+            sender: 'CHAT',
+            text: `${user.first_name} ${user.last_name} has exited the group!`,
+          };
+          try {
+            const res = await axios.post(config.API_SERVER + 'messages', data);
+            try {
+              const room = await axios.get(
+                config.API_SERVER + 'rooms/room/' + currentChat._id,
+              );
+              try {
+                if (room.data.type === 'PUBLIC') {
+                  room.data.members?.map(member => {
+                    if (member.userId !== account.user._id)
+                      sendMessage(
+                        'CHAT',
+                        member.userId,
+                        res.data.text,
+                        currentChat._id,
+                      );
+                  });
+                }
+                setAdminMessage(data);
+              } catch (e) {
+                console.log(e);
+              }
+            } catch (e) {
+              console.log(e);
+            }
+          } catch (e) {
+            console.log(e);
+          }
+          window.location.reload();
+        } catch (e) {
+          console.log(e);
+        }
+      } catch (e) {
+        console.log(e);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   const removeGroup = data => {
+    console.log(data);
+
     data.members.map(async item => {
-      if (account.user._id !== item) {
+      if (account.user._id !== item.userId) {
         socket.emit('sendNotification', {
           senderId: account.user._id,
-          receiverId: item,
+          receiverId: item.userId,
           content: `${data.name} has been removed!`,
         });
-        // await sendNotification(account.user._id, item, `${data.name} has been removed!`)
+        await sendNotification(
+          account.user._id,
+          item.userId,
+          `${data.name} has been removed!`,
+        );
       }
     });
     socket.emit('removeGroup', data);
   };
+  // const navigation = useNavigation();
+  const [messageSent, setMessageSent] = useState(false);
   React.useEffect(() => {
     socket.on('getUsers', users => {
       setOnlineUsers(users);
@@ -103,34 +180,45 @@ const ContextProvider = ({children}) => {
             sender: data.senderId,
             text: data.text,
             createdAt: Date.now(),
+            currentChat: data.currentChat,
           });
+        } else {
+          try {
+            const res = await axios.get(
+              config.API_SERVER + 'user/users/' + data.senderId,
+            );
+            setArrivalMessage({
+              sender: data.senderId,
+              text: data.text,
+              createdAt: Date.now(),
+              currentChat: data.currentChat,
+            });
+            if (currentChat === null) {
+              Alert.alert(
+                res.data.first_name + ' ' + res.data.last_name,
+                data.text,
+                [
+                  {
+                    text: 'Ok',
+                    onPress: () => console.log('Cancel Pressed'),
+                    style: 'cancel',
+                  },
+                  // {
+                  //   text: 'Go',
+                  //   onPress: () => {
+                  //     navigation.navigate({routeName: '/Chats'});
+                  //     userHasRoom(res.data);
+                  //   },
+                  // },
+                ],
+              );
+            }
+          } catch (error) {
+            console.log(error);
+          }
         }
-
-        const res = await axios.get(
-          config.API_SERVER + 'user/users/' + data.senderId,
-        );
-        setArrivalMessage({
-          sender: data.senderId,
-          text: data.text,
-          createdAt: Date.now(),
-          currentChat: data.currentChat,
-        });
-        if (!currentChat) {
-          Alert.alert(
-            res.data.first_name + ' ' + res.data.last_name,
-            data.text,
-            [
-              {
-                text: 'Cancel',
-                onPress: () => console.log('Cancel Pressed'),
-                style: 'cancel',
-              },
-              {text: 'Go', onPress: () => userHasRoom(res.data)},
-            ],
-          );
-        }
-      } catch (error) {
-        console.log(error);
+      } catch (e) {
+        console.log(e);
       }
     });
 
@@ -262,118 +350,93 @@ const ContextProvider = ({children}) => {
       console.log(error);
     }
   };
-  const sendMessage = (senderId, receiverId, newMessage, currentChat) => {
-    // sendMessageNotification(senderId, receiverId, newMessage)
+  const sendMessageNotification = async (sender, to, message) => {
+    try {
+      const u = await axios.get(config.API_SERVER + 'user/users/' + sender);
+      try {
+        const data = {
+          title: u.data.first_name + ' ' + u.data.last_name,
+          userId: to,
+          sender: sender,
+          content: message,
+        };
+        const res = await axios.post(config.API_SERVER + 'notifications', data);
+      } catch (error) {
+        console.log(error);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+  const sendMessage = (
+    senderId,
+    receiverId,
+    newMessage,
+    currentChat,
+    attachement = [],
+  ) => {
+    sendMessageNotification(senderId, receiverId, newMessage);
+    console.log(currentChat);
     socket.emit('sendMessage', {
       senderId: senderId,
       receiverId,
       text: newMessage,
+      attachement,
       currentChat,
     });
   };
 
   const submitAddMember = async (currentChat, addedMembers) => {
     try {
-      try {
-        const res = await axios.put(
-          config.API_SERVER + 'rooms/addNewGroupMember/' + currentChat._id,
-          {members: addedMembers._id},
-        );
-        socket.emit('sendNotification', {
-          senderId: account.user._id,
-          receiverId: addedMembers._id,
-          content: `You have been added to the group ${res.data.name}!`,
-        });
-        //   await sendNotification(
-        //     account.user._id,
-        //     addedMembers._id,
-        //     `You have been added to the group ${res.data.name}!`,
-        //   );
-        socket.emit('addToGroup', {currentChat, addedUser: addedMembers._id});
+      addedMembers?.map(async m => {
         try {
-          const user = await axios.get(
-            config.API_SERVER + 'user/users/' + addedMembers._id,
+          const res = await axios.put(
+            config.API_SERVER + 'rooms/addNewGroupMember/' + currentChat._id,
+            {
+              members: {
+                userId: m._id,
+                joinedIn: moment().toISOString(),
+                leftIn: '',
+              },
+            },
           );
-          try {
-            const data = {
-              roomId: currentChat._id,
-              sender: 'CHAT',
-              text: `${user.data.first_name} ${user.data.last_name} has been added to the group!`,
-            };
-            const res = await axios.post(config.API_SERVER + 'messages', data);
-            try {
-              const room = await axios.get(
-                config.API_SERVER + 'rooms/room/' + currentChat._id,
-              );
-              if (room.data.type === 'PUBLIC') {
-                room.data.members.map(member => {
-                  sendMessage('CHAT', member, res.data.text, currentChat._id);
-                });
-              }
-              setAdminMessage(data);
-            } catch (e) {
-              console.log(e);
-            }
-          } catch (e) {
-            console.log(e);
-          }
-        } catch (e) {
-          console.log(e);
-        }
-      } catch (e) {
-        console.log(e.response.data.message);
-      }
-    } catch (error) {
-      console.log(error);
-    }
-  };
-
-  const submitRemoveMember = async (currentChat, addedMembers) => {
-    try {
-      try {
-        const res = await axios.put(
-          config.API_SERVER +
-            `rooms/removeGroupMember/${currentChat._id}/${addedMembers._id}`,
-        );
-        //   sendNotification(
-        //     account.user._id,
-        //     addedMembers._id,
-        //     `You have been removed from the group ${res.data.name}!`,
-        //   );
-        socket.emit('sendNotification', {
-          senderId: account.user._id,
-          receiverId: addedMembers._id,
-          content: `You have been removed from the group ${res.data.name}!`,
-        });
-        socket.emit('removeFromGroup', {
-          currentChat,
-          removedUser: addedMembers._id,
-        });
-        try {
-          const user = await axios.get(
-            config.API_SERVER + 'user/users/' + addedMembers._id,
+          socket.emit('sendNotification', {
+            senderId: account.user._id,
+            receiverId: m._id,
+            content: `You have been added to the group ${res.data.name}!`,
+          });
+          await sendNotification(
+            account.user._id,
+            m._id,
+            `You have been added to the group ${res.data.name}!`,
           );
-          const data = {
-            roomId: currentChat._id,
-            sender: 'CHAT',
-            text: `${user.data.first_name} ${user.data.last_name} has been removed from the group!`,
-          };
+          socket.emit('addToGroup', {currentChat, addedUser: m._id});
           try {
-            const res = await axios.post(config.API_SERVER + 'messages', data);
+            const user = await axios.get(
+              config.API_SERVER + 'user/users/' + m._id,
+            );
             try {
-              const room = await axios.get(
-                config.API_SERVER + 'rooms/room/' + currentChat._id,
+              const data = {
+                roomId: currentChat._id,
+                sender: 'CHAT',
+                text: `${user.data.first_name} ${user.data.last_name} has been added to the group!`,
+              };
+              const res = await axios.post(
+                config.API_SERVER + 'messages',
+                data,
               );
               try {
+                const room = await axios.get(
+                  config.API_SERVER + 'rooms/room/' + currentChat._id,
+                );
                 if (room.data.type === 'PUBLIC') {
-                  room.data.members?.map(member => {
-                    if (member !== account.user._id)
-                      sendMessage(
-                        'CHAT',
-                        member,
-                        res.data.text,
-                        currentChat._id,
-                      );
+                  room.data.members.map(member => {
+                    sendMessage(
+                      'CHAT',
+                      member.userId,
+                      res.data.text,
+                      currentChat._id,
+                    );
                   });
                 }
                 setAdminMessage(data);
@@ -387,18 +450,88 @@ const ContextProvider = ({children}) => {
             console.log(e);
           }
         } catch (e) {
-          console.log(e);
+          console.log(e.response.data.message);
         }
-      } catch (e) {
-        console.log(e);
-      }
+      });
     } catch (error) {
       console.log(error);
     }
   };
+
+  const submitRemoveMember = (currentChat, addedMembers) => {
+    try {
+      addedMembers?.map(async m => {
+        try {
+          const res = await axios.put(
+            config.API_SERVER +
+              `rooms/removeGroupMember/${currentChat._id}/${m._id}`,
+          );
+          sendNotification(
+            account.user._id,
+            m._id,
+            `You have been removed from the group ${res.data.name}!`,
+          );
+          socket.emit('sendNotification', {
+            senderId: account.user._id,
+            receiverId: m._id,
+            content: `You have been removed from the group ${res.data.name}!`,
+          });
+          socket.emit('removeFromGroup', {currentChat, removedUser: m._id});
+          try {
+            const user = await axios.get(
+              config.API_SERVER + 'user/users/' + m._id,
+            );
+            const data = {
+              roomId: currentChat._id,
+              sender: 'CHAT',
+              text: `${user.data.first_name} ${user.data.last_name} has been removed from the group!`,
+            };
+            try {
+              const res = await axios.post(
+                config.API_SERVER + 'messages',
+                data,
+              );
+              try {
+                const room = await axios.get(
+                  config.API_SERVER + 'rooms/room/' + currentChat._id,
+                );
+                try {
+                  if (room.data.type === 'PUBLIC') {
+                    room.data.members?.map(member => {
+                      if (member.userId !== account.user._id)
+                        sendMessage(
+                          'CHAT',
+                          member.userId,
+                          res.data.text,
+                          currentChat._id,
+                        );
+                    });
+                  }
+                  setAdminMessage(data);
+                } catch (e) {
+                  console.log(e);
+                }
+              } catch (e) {
+                console.log(e);
+              }
+            } catch (e) {
+              console.log(e);
+            }
+          } catch (e) {
+            console.log(e);
+          }
+        } catch (e) {
+          console.log(e);
+        }
+      });
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   const userHasRoom = async user => {
     try {
-      console.log(user);
+      // console.log(user);
       setId(user._id);
       setCurrentChatUser(user);
       const res = await axios.get(config.API_SERVER + 'rooms/' + user._id);
@@ -407,9 +540,11 @@ const ContextProvider = ({children}) => {
       }
       const resp = res.data.map(room => {
         if (
-          room.members.includes(account.user._id) &&
-          room.type === 'PRIVATE'
+          room.type === 'PRIVATE' &&
+          room.members.some(u => u.userId === account.user._id)
         ) {
+          console.log('set chat');
+          console.log(room);
           setCurrentChat(room);
           return true;
         } else {
@@ -436,15 +571,20 @@ const ContextProvider = ({children}) => {
   };
   const createGroup = data => {
     console.log(data);
+    if (data.name === '') return;
     socket.emit('createGroup', data);
     data.members.map(async item => {
-      if (account.user._id !== item) {
+      if (account.user._id !== item.userId) {
         socket.emit('sendNotification', {
           senderId: account.user._id,
-          receiverId: item,
+          receiverId: item.userId,
           content: `You have been added to the new group ${data.name}!`,
         });
-        // await sendNotification(account.user._id, item, `You have been added to the new group ${data.name}!`)
+        await sendNotification(
+          account.user._id,
+          item.userId,
+          `You have been added to the new group ${data.name}!`,
+        );
       }
     });
   };
@@ -456,12 +596,16 @@ const ContextProvider = ({children}) => {
         onlineUsers,
         arrivalMessage,
         profilePicture,
+        adminMessage,
         messages,
         messagesLoading,
         isChanged,
+        messageSent,
+        setMessageSent,
         setIsChanged,
         handleCallButton,
         submitAddMember,
+        exitGroup,
         submitRemoveMember,
         sendMessage,
         setMessagesLoading,
