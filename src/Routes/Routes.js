@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, {useContext, useEffect, useState} from 'react';
 import {NavigationContainer} from '@react-navigation/native';
 import {createStackNavigator} from '@react-navigation/stack';
 import {StyleSheet, Text, View, Image, TouchableOpacity} from 'react-native';
@@ -16,10 +16,11 @@ import EditAccount from '../screens/EditAccount';
 import Notification from '../screens/Notification';
 import {navigationRef} from '../Context/navRef';
 import Profile from '../screens/Profile';
+import {AppContext} from '../Context/AppContext';
 
 export default function Routes() {
   const account = useSelector(s => s.account);
-
+  // const {notificationsCount} = useContext(AppContext);
   const Tab = createBottomTabNavigator();
   const ChatStack = createStackNavigator();
   const SigninStack = createStackNavigator();
@@ -37,7 +38,7 @@ export default function Routes() {
           }}
           component={Message}
         />
-        <ChatStack.Screen name="Videos" component={Video} />
+        {/* <ChatStack.Screen name="Videos" component={Video} /> */}
         <ChatStack.Screen name="Profiles" component={Profile} />
       </ChatStack.Navigator>
     );
@@ -87,6 +88,7 @@ export default function Routes() {
         {account.isLoggedIn ? (
           <Tab.Navigator
             screenOptions={{
+              lazy: false,
               tabBarShowLabel: false,
               headerShown: false,
               tabBarStyle: {
@@ -114,7 +116,7 @@ export default function Routes() {
                         color: focused ? '#e32f45' : '#748c94',
                         fontSize: 12,
                       }}>
-                      Dashoard
+                      Dashboard
                     </Text>
                   </View>
                 ),
@@ -151,6 +153,7 @@ export default function Routes() {
               name="NotificationScreen"
               component={NotificationStackScreen}
               options={{
+                tabBarBadge: 0,
                 tabBarIcon: ({focused}) => (
                   <View
                     style={{alignItems: 'center', justifyContent: 'center'}}>

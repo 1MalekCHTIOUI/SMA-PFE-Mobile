@@ -25,22 +25,13 @@ const ContextProvider = ({children}) => {
   const [appLoading, setAppLoading] = useState(true);
   const [onlineUsers, setOnlineUsers] = useState([]);
   const [ROOM_ID, setROOM_ID] = useState('');
-
+  const [notificationsCount, setNotificationsCount] = useState(0);
   const account = useSelector(s => s.account);
   const socket = io.connect(config.SOCKET_SERVER);
   const [callData, setCallData] = useState({caller: '', receiver: ''});
 
-  const [callerId, setCallerId] = useState('');
-  const [declineInfo, setDeclineInfo] = useState(null);
-  const [callAccepted, setCallAccepted] = useState(false);
-  const [callDeclined, setCallDeclined] = useState(false);
-  const [callerMsg, setCallerMsg] = useState('');
-  const [isReceivingCall, setIsReceivingCall] = useState(false);
   const [arrivalMessage, setArrivalMessage] = useState(null);
   const [adminMessage, setAdminMessage] = useState(null);
-  const [groupMembers, setGroupMembers] = useState([]);
-
-  const [userGroups, setUserGroups] = useState([]);
 
   const [arrivalNotification, setArrivalNotification] = useState(null);
 
@@ -147,7 +138,6 @@ const ContextProvider = ({children}) => {
       console.log(error);
     }
   };
-
   const removeGroup = data => {
     console.log(data);
 
@@ -193,26 +183,28 @@ const ContextProvider = ({children}) => {
               createdAt: Date.now(),
               currentChat: data.currentChat,
             });
-            if (currentChat === null) {
-              Alert.alert(
-                res.data.first_name + ' ' + res.data.last_name,
-                data.text,
-                [
-                  {
-                    text: 'Ok',
-                    onPress: () => console.log('Cancel Pressed'),
-                    style: 'cancel',
-                  },
-                  // {
-                  //   text: 'Go',
-                  //   onPress: () => {
-                  //     navigation.navigate({routeName: '/Chats'});
-                  //     userHasRoom(res.data);
-                  //   },
-                  // },
-                ],
-              );
-            }
+
+            setNotificationsCount(notificationsCount + 1);
+            // if (currentChat === null) {
+            //   Alert.alert(
+            //     res.data.first_name + ' ' + res.data.last_name,
+            //     data.text,
+            //     [
+            //       {
+            //         text: 'Ok',
+            //         onPress: () => console.log('Cancel Pressed'),
+            //         style: 'cancel',
+            //       },
+            //       // {
+            //       //   text: 'Go',
+            //       //   onPress: () => {
+            //       //     navigation.navigate({routeName: '/Chats'});
+            //       //     userHasRoom(res.data);
+            //       //   },
+            //       // },
+            //     ],
+            //   );
+            // }
           } catch (error) {
             console.log(error);
           }
@@ -375,12 +367,16 @@ const ContextProvider = ({children}) => {
     currentChat,
     attachement = [],
   ) => {
-    sendMessageNotification(senderId, receiverId, newMessage);
+    const text = newMessage
+      ? newMessage
+      : `${user.data.first_name} ${user.data.last_name} has sent an attachment!`;
+
+    sendMessageNotification(senderId, receiverId, text);
     console.log(currentChat);
     socket.emit('sendMessage', {
       senderId: senderId,
       receiverId,
-      text: newMessage,
+      text: text,
       attachement,
       currentChat,
     });
@@ -498,13 +494,12 @@ const ContextProvider = ({children}) => {
                 try {
                   if (room.data.type === 'PUBLIC') {
                     room.data.members?.map(member => {
-                      if (member.userId !== account.user._id)
-                        sendMessage(
-                          'CHAT',
-                          member.userId,
-                          res.data.text,
-                          currentChat._id,
-                        );
+                      sendMessage(
+                        'CHAT',
+                        member.userId,
+                        res.data.text,
+                        currentChat._id,
+                      );
                     });
                   }
                   setAdminMessage(data);
@@ -601,6 +596,8 @@ const ContextProvider = ({children}) => {
         messagesLoading,
         isChanged,
         messageSent,
+        notificationsCount,
+        setNotificationsCount,
         setMessageSent,
         setIsChanged,
         handleCallButton,

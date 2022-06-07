@@ -24,6 +24,9 @@ import likeImage from '../../assets/icons/like.png';
 import Comment from '../Comment/Comment';
 import {launchCamera, launchImageLibrary} from 'react-native-image-picker';
 // import User1 from './../../../assets/images/users/user.svg';
+const isImage = str => {
+  return str.includes('.png') || str.includes('.jpg');
+};
 const Post = ({post, index}) => {
   const {account, emitNewLike} = useContext(AppContext);
   const [like, setLike] = useState(post.likes.length);
@@ -248,15 +251,14 @@ const Post = ({post, index}) => {
           {post?.attachment.length > 0 &&
             post?.attachment.map(f => (
               <View style={styles.imageContainer}>
-                {f.actualName.includes('.png') ||
-                  (f.actualName.includes('.jpg') && (
-                    <Image
-                      style={styles.postImg}
-                      source={{uri: config.CONTENT + f.actualName}}
-                      resizeMode="stretch"
-                      alt="loading..."
-                    />
-                  ))}
+                {isImage(f.actualName) && (
+                  <Image
+                    style={styles.postImg}
+                    source={{uri: config.CONTENT + f.actualName}}
+                    resizeMode="stretch"
+                    alt="loading..."
+                  />
+                )}
                 {f.actualName.includes('.mp4') && (
                   <Video
                     autoplay={false}
@@ -438,6 +440,7 @@ const styles = StyleSheet.create({
     elevation: 1,
     width: '100%',
     height: '100%',
+    objectFit: 'contain',
     maxHeight: 500,
     borderRadius: 5,
   },

@@ -26,6 +26,12 @@ const DashboardScreen = () => {
   //   const classes = useStyles();
   useEffect(() => {
     setLoading(false);
+    return () => {
+      setPostsLoading(false);
+      setTodaysPosts(null);
+      setPosts([]);
+      setLoading(false);
+    };
   }, []);
 
   const [usersLoading, setUsersLoading] = React.useState(false);
@@ -74,10 +80,8 @@ const DashboardScreen = () => {
     getOnlineUsers();
     fetchPublicPosts();
 
-    setTimeout(() => {
-      // changeColor('green');
-      setRefreshing(false);
-    }, 2000);
+    // changeColor('green');
+    setRefreshing(false);
   };
   return (
     <ScrollView

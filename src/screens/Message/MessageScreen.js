@@ -45,19 +45,15 @@ const MessageScreen = () => {
   const [sendIsLoading, setSendIsLoading] = useState(false);
 
   useEffect(() => {
-    console.log(arrivalMessage);
     if (
       arrivalMessage &&
-      currentChat?.members.includes(arrivalMessage.sender) &&
+      currentChat?.members.some(u => u.userId === arrivalMessage.sender) &&
       currentChat._id === arrivalMessage.currentChat
     ) {
-      console.log('TIME TO SET RECEIVED MESSAGE IN ROOM');
-
       setMessages(prev => [...prev, arrivalMessage]);
     }
   }, [arrivalMessage]);
   React.useEffect(() => {
-    console.log(adminMessage);
     adminMessage &&
       currentChat?._id === adminMessage.currentChat &&
       setMessages(prev => [...prev, adminMessage]);
@@ -148,9 +144,9 @@ const MessageScreen = () => {
         });
     }
   }, []);
-  // React.useEffect(() => {
-  //   scrollRef.current?.scrollIntoView({behavior: 'smooth'});
-  // }, [messages]);
+  React.useEffect(() => {
+    scrollRef.current?.scrollToEnd({animated: 'true'});
+  }, [messages]);
   const readMessages = async () => {
     console.log('Setting as read');
     messages?.map(async m => {
@@ -285,11 +281,13 @@ const MessageScreen = () => {
   };
   return (
     <SafeAreaView style={styles.mainContainer}>
-      {currentChat.type === 'PUBLIC' && account.user.role[0] !== 'USER' && (
-        <View style={{marginBottom: 15}}>
-          <GroupTools group={currentChat} />
-        </View>
-      )}
+      {currentChat &&
+        currentChat.type === 'PUBLIC' &&
+        account.user.role[0] !== 'USER' && (
+          <View style={{marginBottom: 15}}>
+            <GroupTools group={currentChat} />
+          </View>
+        )}
       {currentChat &&
         currentChat.type === 'PRIVATE' &&
         messagesLoading === false &&
@@ -307,25 +305,20 @@ const MessageScreen = () => {
       {
         <>
           {currentChat ? (
-            <ScrollView
-              style={styles.messageArea}
-              ref={scrollRef}
-              onContentSizeChange={() => scrollRef.current.scrollToEnd()}>
+            <ScrollView style={styles.messageArea} ref={scrollRef}>
               <ActivityIndicator
                 size="large"
                 style={{position: 'absolute', left: '45%'}}
                 animating={messagesLoading}
               />
               {messages?.map((m, i) => (
-                <View key={i}>
-                  <Message
-                    message={m}
-                    own={m.sender === account.user._id}
-                    type={currentChat.type}
-                    key={i}
-                    mk={i}
-                  />
-                </View>
+                <Message
+                  message={m}
+                  own={m.sender === account.user._id}
+                  type={currentChat.type}
+                  key={i}
+                  mk={i}
+                />
               ))}
             </ScrollView>
           ) : null}

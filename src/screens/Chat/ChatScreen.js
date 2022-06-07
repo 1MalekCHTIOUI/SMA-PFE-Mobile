@@ -72,10 +72,11 @@ const ChatScreen = () => {
       }
     }
     getRooms();
-  }, [account]);
-  // useEffect(() => {
-  //   getLastRoomMessage();
-  // }, [arrivalMessage]);
+  }, [account, arrivalMessage]);
+  useEffect(() => {
+    setPrivateRooms([]);
+    getPrivateRooms();
+  }, [arrivalMessage]);
   useEffect(() => {
     const createUser = async () => {
       if (existInRoom === false) {
@@ -147,49 +148,79 @@ const ChatScreen = () => {
   const [privateRooms, setPrivateRooms] = useState([]);
   const [privateRoomsLoading, setPrivateRoomsLoading] = useState(false);
   const getPrivateRooms = () => {
-    rooms?.map(item => {
-      // if (item.type === 'PRIVATE' || item.type === 'PUBLIC') {
-      item.members.map(async m => {
-        if (m.userId !== account.user._id) {
-          if (privateRooms?.some(user => user.user._id !== m.userId)) return;
-          try {
-            setPrivateRoomsLoading(true);
-            const res = await axios.get(
-              config.API_SERVER + 'user/users/' + m.userId,
-            );
-
-            if (
-              privateRooms?.some(user => user.user._id === res.data._id) ===
-              false
-            ) {
-              console.warn('doesnt exist');
+    rooms?.map(async item => {
+      if (item.type === 'PRIVATE') {
+        item.members.map(async m => {
+          if (m.userId !== account.user._id) {
+            if (privateRooms?.some(user => user.user?._id !== m.userId)) return;
+            try {
               setPrivateRoomsLoading(true);
-              try {
-                const t = await axios.get(
-                  config.API_SERVER + 'messages/lastMessage/' + item._id,
-                );
-                setPrivateRooms(prev => [
-                  ...prev,
-                  {
-                    user: res.data,
-                    lastMessage: t.data,
-                    type: item.type,
-                    room: item,
-                  },
-                ]);
-              } catch (error) {
-                console.log(error);
-              }
+              const res = await axios.get(
+                config.API_SERVER + 'user/users/' + m.userId,
+              );
 
+              if (
+                privateRooms?.some(user => user.user._id === res.data._id) ===
+                false
+              ) {
+                console.warn('doesnt exist');
+                setPrivateRoomsLoading(true);
+                try {
+                  const t = await axios.get(
+                    config.API_SERVER + 'messages/lastMessage/' + item._id,
+                  );
+                  setPrivateRooms(prev => [
+                    ...prev,
+                    {
+                      user: res.data,
+                      lastMessage: t.data,
+                      type: item.type,
+                      room: item,
+                    },
+                  ]);
+                } catch (error) {
+                  console.log(error);
+                }
+
+                setPrivateRoomsLoading(false);
+              }
               setPrivateRoomsLoading(false);
+            } catch (e) {
+              setPrivateRoomsLoading(false);
+              console.log(e);
             }
-            setPrivateRoomsLoading(false);
-          } catch (e) {
-            setPrivateRoomsLoading(false);
-            console.log(e);
           }
+        });
+      }
+      if (item.type === 'PUBLIC') {
+        if (privateRooms?.some(user => user.room._id !== item._id)) return;
+        try {
+          setPrivateRoomsLoading(true);
+          if (
+            privateRooms?.some(user => user.room._id === item._id) === false
+          ) {
+            console.warn('doesnt exist');
+            setPrivateRoomsLoading(true);
+
+            const t = await axios.get(
+              config.API_SERVER + 'messages/lastMessage/' + item._id,
+            );
+            console.log(t.data);
+            setPrivateRooms(prev => [
+              ...prev,
+              {
+                lastMessage: t.data,
+                type: item.type,
+                room: item,
+              },
+            ]);
+          }
+          setPrivateRoomsLoading(false);
+        } catch (e) {
+          setPrivateRoomsLoading(false);
+          console.log(e);
         }
-      });
+      }
     });
   };
   useEffect(() => {
@@ -273,7 +304,7 @@ const ChatScreen = () => {
           }}
         />
 
-        {item.type === 'PRIVATE' && (
+        {item.room.type === 'PRIVATE' && (
           <TouchableOpacity
             style={styles.convContainer}
             onPress={() => userHasRoom(item.user)}>
@@ -300,19 +331,22 @@ const ChatScreen = () => {
               <Text
                 style={{
                   fontFamily: 'Montserrat-Regular',
-                  color: 'black',
+                  color: 'rgba(0,0,0,0.6)',
                   paddingTop: 5,
                 }}>
-                {item.lastMessage?.text
-                  ? item.lastMessage?.text
-                  : 'No messages'}
+                {item.lastMessage?.text !== '' && item.lastMessage?.text}
+
+                {item.lastMessage?.attachment?.length > 0 &&
+                  item.user.first_name + ' has sent an attachment!'}
+
+                {!item.lastMessage && 'No messages'}
               </Text>
             </SafeAreaView>
             <SafeAreaView style={styles.convEndSection}>
               <Text style={{fontFamily: 'Montserrat-Regular', color: 'black'}}>
                 {item.lastMessage?.createdAt
                   ? format(item.lastMessage?.createdAt)
-                  : null}
+                  : '---'}
               </Text>
               <Text style={styles.convMessageCount}>
                 {item.user._id === unreadMessages.receiver
@@ -322,7 +356,7 @@ const ChatScreen = () => {
             </SafeAreaView>
           </TouchableOpacity>
         )}
-        {/* {item.type === 'PUBLIC' && (
+        {item.type === 'PUBLIC' && (
           <TouchableOpacity
             style={styles.convContainer}
             onPress={() => setCurrentChat(item.group)}>
@@ -339,35 +373,35 @@ const ChatScreen = () => {
                   color: 'black',
                   fontSize: 15,
                 }}>
-                {item.group.name}
+                {item.room.name}
               </Text>
               <Text
                 style={{
                   fontFamily: 'Montserrat-Regular',
-                  color: 'black',
+                  color: 'rgba(0,0,0,0.6)',
                   paddingTop: 5,
                 }}>
-                {item.group._id === lastMessage.message.roomId &&
-                lastMessage.message?.text
-                  ? lastMessage.message?.text
-                  : 'No messages in this room'}
+                {item.lastMessage?.text
+                  ? item.lastMessage?.text
+                  : 'No messages'}
               </Text>
             </SafeAreaView>
             <SafeAreaView style={styles.convEndSection}>
-              {lastMessage.message?.createdAt && (
-                <Text
-                  style={{fontFamily: 'Montserrat-Regular', color: 'black'}}>
-                  {format(lastMessage.message.createdAt)}
-                </Text>
-              )}
-              <Text style={styles.convMessageCount}>
-                {item.group.members.some(u => u.userId === lastMessage.receiver)
+              <Text style={{fontFamily: 'Montserrat-Regular', color: 'black'}}>
+                {item.lastMessage?.createdAt
+                  ? format(item.lastMessage?.createdAt)
+                  : null}
+              </Text>
+              {/* <Text style={styles.convMessageCount}>
+                {item.room.members.some(
+                  u => u.userId === item.lastMessage.receiver,
+                )
                   ? unreadMessages.count
                   : 0}
-              </Text>
+              </Text> */}
             </SafeAreaView>
           </TouchableOpacity>
-        )} */}
+        )}
       </>
     ));
   };
