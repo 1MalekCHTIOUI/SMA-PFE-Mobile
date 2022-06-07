@@ -28,7 +28,16 @@ const isImage = str => {
   return str.includes('.png') || str.includes('.jpg');
 };
 const Post = ({post, index}) => {
-  const {account, emitNewLike} = useContext(AppContext);
+  const {
+    account,
+    emitNewLike,
+    newLike,
+    setNewLike,
+    newUnlike,
+    newComment,
+    emitNewComment,
+    emitNewUnlike,
+  } = useContext(AppContext);
   const [like, setLike] = useState(post.likes.length);
   const [isLiked, setIsLiked] = useState(
     post.likes.some(u => u.userId === account?.user._id),
@@ -88,21 +97,35 @@ const Post = ({post, index}) => {
         userId: account.user._id,
         username: `${user.first_name} ${user.last_name}`,
       });
-      emitNewLike(account.user._id, post.userId);
-    } catch (error) {
-      console.log(error);
-    }
-  };
-  const unlikePost = async () => {
-    try {
-      await axios.put(config.API_SERVER + 'posts/unlike/' + post._id, {
-        userId: account.user._id,
-      });
+      emitNewLike(account.user._id, post.userId, post._id);
     } catch (error) {
       console.log(error);
     }
   };
 
+  const unlikePost = async () => {
+    try {
+      await axios.put(config.API_SERVER + 'posts/unlike/' + post._id, {
+        userId: account.user._id,
+      });
+      emitNewUnlike(account.user._id, post.userId, post._id);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+  useEffect(() => {
+    if (newLike && post._id === newLike.postId) {
+      setLike(like + 1);
+    }
+    if (newUnlike && post._id === newUnlike.postId) {
+      setLike(like - 1);
+    }
+  }, [newLike, newUnlike]);
+  useEffect(() => {
+    if (newComment && post._id === newComment.comment.postId) {
+      setComments(prev => [...prev, newComment.comment]);
+    }
+  }, [newComment]);
   // useEffect(() => {
   //     if (isLiked) {
   //         likePost();
@@ -168,18 +191,21 @@ const Post = ({post, index}) => {
       });
     }
     try {
-      const imageRes = await axios.post(
-        config.API_SERVER + 'upload',
-        formData,
-        {headers: {'Content-Type': 'multipart/form-data'}},
-      );
-      postedComment.attachment = [
-        {
-          displayName: commentFile.assets[0].fileName,
-          actualName: imageRes.data.upload,
-        },
-      ];
-      console.log(imageRes.data.upload);
+      if (commentFile !== null) {
+        const imageRes = await axios.post(
+          config.API_SERVER + 'upload',
+          formData,
+          {headers: {'Content-Type': 'multipart/form-data'}},
+        );
+        console.log(imageRes.data.upload);
+
+        postedComment.attachment = [
+          {
+            displayName: commentFile.assets[0].fileName,
+            actualName: imageRes.data.upload,
+          },
+        ];
+      }
       try {
         console.log(postedComment);
         const res = await axios.post(
@@ -188,6 +214,8 @@ const Post = ({post, index}) => {
         );
         console.log(res.data);
         setComments(prev => [...prev, res.data]);
+        emitNewComment(account.user._id, post.userId, res.data);
+
         setComment('');
       } catch (error) {
         console.log(error.response.data.message);
@@ -337,12 +365,31 @@ const Post = ({post, index}) => {
                 style={{display: 'none'}}
               /> */}
             </TouchableOpacity>
+
             <TouchableOpacity
               onPress={submitComment}
               style={styles.commentButton}>
               <Text style={{color: 'black'}}>Post</Text>
             </TouchableOpacity>
           </View>
+
+          {commentFile && (
+            <View style={{position: 'relative', width: '100%'}}>
+              <Image
+                source={{uri: commentFile.assets[0].uri}}
+                style={{width: 50, height: 50}}
+              />
+              <Pressable
+                style={{position: 'absolute', left: 80}}
+                onPress={() => setCommentFile(null)}>
+                <Image
+                  source={require('../../assets/icons/cancel.png')}
+                  style={{width: 20, height: 20}}
+                />
+              </Pressable>
+            </View>
+          )}
+
           {comments?.map((comment, index) => (
             <View key={index}>
               <Comment comment={comment} />
@@ -475,6 +522,9 @@ const styles = StyleSheet.create({
   },
   commentInput: {
     width: '70%',
+    color: 'black',
+    borderWidth: 1,
+    borderColor: 'black',
     padding: 5,
   },
   writeComment: {

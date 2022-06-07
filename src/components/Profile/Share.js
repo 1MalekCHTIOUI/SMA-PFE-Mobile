@@ -144,6 +144,7 @@ const Share = ({user, setPosts}) => {
         emitNewPost(account.user._id, post.priority);
         setPosts(prev => [...prev, res.data]);
         setPosting(false);
+        setPostFile(null);
       } catch (error) {
         setPosting(false);
         console.log(error.message);

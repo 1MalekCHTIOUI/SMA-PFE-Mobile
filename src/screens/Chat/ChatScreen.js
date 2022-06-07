@@ -72,7 +72,8 @@ const ChatScreen = () => {
       }
     }
     getRooms();
-  }, [account, arrivalMessage]);
+    setMessageSent(false);
+  }, [account, arrivalMessage, messageSent]);
   useEffect(() => {
     setPrivateRooms([]);
     getPrivateRooms();
@@ -136,14 +137,11 @@ const ChatScreen = () => {
     getPrivateRooms();
     // getLastRoomMessage();
   }, [rooms]);
-  useEffect(() => {
-    if (messageSent) {
-      setPrivateRooms([]);
-      getPrivateRooms();
-      // getLastRoomMessage();
-      setMessageSent(false);
-    }
-  }, [messageSent]);
+  //   useEffect(() => {
+  //     if (messageSent) {
+  // getRooms()
+  //     }
+  //   }, [messageSent]);
 
   const [privateRooms, setPrivateRooms] = useState([]);
   const [privateRoomsLoading, setPrivateRoomsLoading] = useState(false);

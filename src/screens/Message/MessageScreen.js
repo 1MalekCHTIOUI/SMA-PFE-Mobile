@@ -246,6 +246,7 @@ const MessageScreen = () => {
         currentChat._id,
         message.attachment,
       );
+      setCommentFile(null);
     } catch (error) {
       setSendIsLoading(false);
       console.log(error);

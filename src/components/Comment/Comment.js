@@ -11,6 +11,9 @@ import {
 import config from '../../config';
 import {AppContext} from '../../Context/AppContext';
 import likeImage from '../../assets/icons/like.png';
+const isImage = str => {
+  return str.includes('.png') || str.includes('.jpg');
+};
 const Comment = ({comment}) => {
   const [user, setUser] = useState({});
   const {account} = useContext(AppContext);
@@ -90,7 +93,7 @@ const Comment = ({comment}) => {
             resizeMode="cover"
             source={
               comment.uploadedBy.userId === user._id && user.profilePicture
-                ? {uri: config.HOST + user.profilePicture}
+                ? {uri: config.CONTENT + user.profilePicture}
                 : require('../../assets/images/user.png')
             }
             alt=""
@@ -101,10 +104,10 @@ const Comment = ({comment}) => {
             <Text style={styles.commentUploader} variant="text">
               {user.first_name} {user.last_name}
             </Text>
-            <Text>{comment?.content}</Text>
+            <Text style={{color: 'black'}}>{comment?.content}</Text>
             <View>
               {comment.attachment?.map(a => {
-                if (a.includes('.jpg') || a.includes('.png')) {
+                if (isImage(a.actualName)) {
                   return (
                     <Image
                       style={{
@@ -113,7 +116,7 @@ const Comment = ({comment}) => {
                         height: 200,
                       }}
                       resizeMode="stretch"
-                      source={{uri: config.CONTENT + a}}
+                      source={{uri: config.CONTENT + a.actualName}}
                       alt=""
                     />
                   );
@@ -172,8 +175,9 @@ const styles = StyleSheet.create({
     height: '100%',
   },
   postProfileImg: {
-    width: '100%',
-    height: '100%',
+    width: 55,
+    height: 55,
+    marginBottom: 25,
     borderRadius: 50,
     zIndex: 5,
   },
@@ -206,6 +210,7 @@ const styles = StyleSheet.create({
     display: 'flex',
     alignSelf: 'flex-start',
     fontWeight: 'bold',
+    color: 'black',
     width: '100%',
     flex: 1,
   },

@@ -261,6 +261,7 @@ const ContextProvider = ({children}) => {
     });
     socket.on('newPost', data => {
       if (account.user._id !== data.senderId) {
+        setNewPost(data.content);
         saveNotificationToDB({
           actor: data.senderId,
           content: data.content,
@@ -282,10 +283,8 @@ const ContextProvider = ({children}) => {
     socket.on('newLike', data => {
       if (account.user._id !== data.senderId) {
         // openNotification('New like', data.content, 'notif');
-        saveNotificationToDB({
-          actor: data.senderId,
-          content: data.content,
-        });
+        setNewLike({userId: data.senderId, postId: data.postId});
+
         setArrivalNotification({
           title: 'New like',
           sender: data.senderId,
@@ -295,7 +294,30 @@ const ContextProvider = ({children}) => {
         });
       }
     });
+    socket.on('newUnlike', data => {
+      if (account.user._id !== data.senderId) {
+        setNewUnlike({userId: data.senderId, postId: data.postId});
+      }
+    });
+    socket.on('newComment', data => {
+      if (account.user._id !== data.senderId) {
+        setNewComment({comment: data.comment});
+        openNotification('New comment', data.comment.content, 'notif');
+        setArrivalNotification({
+          title: 'New Comment',
+          sender: data.senderId,
+          content: data.comment.content,
+          createdAt: Date.now(),
+          read: false,
+        });
+      }
+    });
   }, [socket]);
+
+  const [newPost, setNewPost] = React.useState(false);
+  const [newLike, setNewLike] = React.useState(null);
+  const [newUnlike, setNewUnlike] = React.useState(null);
+  const [newComment, setNewComment] = React.useState(null);
   const emitNewPost = async (uid, priority) => {
     // sendNotification(account.user._id, m._id, `You have been removed from the group ${res.data.name}!`);
     try {
@@ -310,14 +332,26 @@ const ContextProvider = ({children}) => {
       console.log(error);
     }
   };
-
-  const emitNewLike = async (senderId, receiverId) => {
+  const emitNewUnlike = async (senderId, receiverId, postId) => {
+    // sendNotification(account.user._id, m._id, `You have been removed from the group ${res.data.name}!`);
+    try {
+      socket.emit('newUnlike', {
+        senderId,
+        receiverId: receiverId,
+        postId: postId,
+      });
+    } catch (error) {
+      console.log(error);
+    }
+  };
+  const emitNewLike = async (senderId, receiverId, postId) => {
     // sendNotification(account.user._id, m._id, `You have been removed from the group ${res.data.name}!`);
     try {
       // const u = await axios.get(config.API_SERVER + 'user/users/' + uid);
       socket.emit('newLike', {
         senderId,
         receiverId: receiverId,
+        postId: postId,
         content: `${account.user.first_name} ${account.user.last_name} liked your post!`,
       });
     } catch (error) {
@@ -360,26 +394,32 @@ const ContextProvider = ({children}) => {
       console.log(error);
     }
   };
-  const sendMessage = (
+  const sendMessage = async (
     senderId,
     receiverId,
     newMessage,
     currentChat,
     attachement = [],
   ) => {
-    const text = newMessage
-      ? newMessage
-      : `${user.data.first_name} ${user.data.last_name} has sent an attachment!`;
-
-    sendMessageNotification(senderId, receiverId, text);
-    console.log(currentChat);
-    socket.emit('sendMessage', {
-      senderId: senderId,
-      receiverId,
-      text: text,
-      attachement,
-      currentChat,
-    });
+    try {
+      const user = await axios.get(
+        config.API_SERVER + 'user/users/' + senderId,
+      );
+      const text = newMessage
+        ? newMessage
+        : `${user.data.first_name} ${user.data.last_name} has sent an attachment!`;
+      sendMessageNotification(senderId, receiverId, text);
+      console.log(currentChat);
+      socket.emit('sendMessage', {
+        senderId: senderId,
+        receiverId,
+        text: text,
+        attachement,
+        currentChat,
+      });
+    } catch (e) {
+      console.log(e);
+    }
   };
 
   const submitAddMember = async (currentChat, addedMembers) => {
@@ -597,6 +637,14 @@ const ContextProvider = ({children}) => {
         isChanged,
         messageSent,
         notificationsCount,
+        newPost,
+        setNewPost,
+        newLike,
+        setNewLike,
+        newUnlike,
+        setNewUnlike,
+        newComment,
+        setNewComment,
         setNotificationsCount,
         setMessageSent,
         setIsChanged,
@@ -610,6 +658,7 @@ const ContextProvider = ({children}) => {
         userHasRoom,
         removeGroup,
         removeMessagesFromRoom,
+        emitNewUnlike,
         emitNewPost,
         emitNewLike,
         account,
