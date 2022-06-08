@@ -158,6 +158,11 @@ const DashboardScreen = () => {
               <Post post={item} index={index} />
             </View>
           ))}
+        {posts.length === 0 && (
+          <Text style={{fontSize: 20, color: 'black', textAlign: 'center'}}>
+            No posts!
+          </Text>
+        )}
       </View>
     </ScrollView>
   );
