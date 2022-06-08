@@ -26,9 +26,6 @@ const NotificationScreen = () => {
         config.API_SERVER + 'notifications/' + account.user._id,
       );
       setNotifications(n.data);
-      navigation.setOptions({
-        tabBarBadge: n.data.length,
-      });
       setLoading(false);
     } catch (error) {
       setLoading(true);
@@ -38,9 +35,9 @@ const NotificationScreen = () => {
   useEffect(() => {
     getNotifications();
   }, []);
-  useEffect(() => {
-    setNotificationsCount(notifications.length);
-  }, [notifications]);
+  // useEffect(() => {
+  //   setNotificationsCount(notifications.length);
+  // }, [notifications]);
   // useEffect(() => {
   //   navigation.setOptions({
   //     tabBarBadge: notificationsCount,
@@ -51,7 +48,7 @@ const NotificationScreen = () => {
       await axios.delete(
         config.API_SERVER + 'notifications/' + account.user._id,
       );
-      // setNotificationsCount(0);
+      setNotificationsCount(0);
       setNotifications([]);
     } catch (error) {
       console.log(error);
@@ -79,13 +76,14 @@ const NotificationScreen = () => {
         )}
       </View>
       <ScrollView>
-        {notifications
-          ?.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-          .map(n => (
-            <View key={n._id}>
-              <Notification notification={n} />
-            </View>
-          ))}
+        {notifications.length > 0 &&
+          notifications
+            ?.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+            ?.map(n => (
+              <View key={n._id}>
+                <Notification notification={n} />
+              </View>
+            ))}
       </ScrollView>
     </View>
   );

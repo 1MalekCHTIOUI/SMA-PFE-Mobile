@@ -17,16 +17,33 @@ import Notification from '../screens/Notification';
 import {navigationRef} from '../Context/navRef';
 import Profile from '../screens/Profile';
 import {AppContext} from '../Context/AppContext';
+import config from '../config';
+import axios from 'axios';
 
 export default function Routes() {
   const account = useSelector(s => s.account);
-  // const {notificationsCount} = useContext(AppContext);
+  const {notificationsCount} = useContext(AppContext);
   const Tab = createBottomTabNavigator();
   const ChatStack = createStackNavigator();
   const SigninStack = createStackNavigator();
   const DashboardStack = createStackNavigator();
   const SettingsStack = createStackNavigator();
   const NotificationStack = createStackNavigator();
+  const [c, setC] = useState(0);
+  const getno = async () => {
+    try {
+      const t = await axios.get(
+        config.API_SERVER + 'notifications/' + account.user._id,
+      );
+      setC(t.data.length);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+  getno();
+  useEffect(() => {
+    getno();
+  }, [notificationsCount]);
   const ChatStackScreen = () => {
     return (
       <ChatStack.Navigator>
@@ -94,6 +111,12 @@ export default function Routes() {
               tabBarStyle: {
                 height: 60,
               },
+              safeAreaInsets: {
+                top: 0,
+                bottom: 0,
+                left: 0,
+                right: 0,
+              },
             }}>
             <Tab.Screen
               name="DashboardScreen"
@@ -153,7 +176,7 @@ export default function Routes() {
               name="NotificationScreen"
               component={NotificationStackScreen}
               options={{
-                tabBarBadge: 0,
+                tabBarBadge: c,
                 tabBarIcon: ({focused}) => (
                   <View
                     style={{alignItems: 'center', justifyContent: 'center'}}>

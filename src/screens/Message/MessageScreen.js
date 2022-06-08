@@ -45,6 +45,7 @@ const MessageScreen = () => {
   const [sendIsLoading, setSendIsLoading] = useState(false);
 
   useEffect(() => {
+    console.log(arrivalMessage);
     if (
       arrivalMessage &&
       currentChat?.members.some(u => u.userId === arrivalMessage.sender) &&
@@ -151,7 +152,7 @@ const MessageScreen = () => {
     console.log('Setting as read');
     messages?.map(async m => {
       try {
-        if (m.read[account.user._id] === false) {
+        if (m?.read[account.user._id] === false) {
           axios.put(config.API_SERVER + 'messages/readMessages/' + m.roomId, {
             currentUserId: account.user._id,
           });
@@ -182,6 +183,7 @@ const MessageScreen = () => {
     e.preventDefault();
     const formData = new FormData();
     if (newMessage === '' && commentFile === null) return;
+    setSendIsLoading(true);
     const receiverId = currentChat.members.find(
       m => m.userId !== account.user._id,
     );
@@ -192,7 +194,7 @@ const MessageScreen = () => {
       attachment: [],
       read: {
         [account.user._id]: true,
-        [receiverId.userID]: false,
+        [receiverId.userId]: false,
       },
     };
     if (commentFile !== null) {
@@ -203,8 +205,9 @@ const MessageScreen = () => {
       });
     }
     try {
-      try {
-        if (commentFile !== null) {
+      let success = true;
+      if (commentFile !== null) {
+        try {
           const response = await axios.post(
             config.API_SERVER + 'upload',
             formData,
@@ -216,37 +219,30 @@ const MessageScreen = () => {
               actualName: response.data.upload,
             },
           ];
-          console.log(message.attachment);
+          success = true;
+        } catch (error) {
+          setSendIsLoading(false);
+          console.log(error);
+          success = false;
         }
-      } catch (error) {
-        console.log(error.response.data.message);
       }
-      console.log(message);
-
-      setSendIsLoading(true);
-      const res = await axios.post(config.API_SERVER + 'messages', message);
-      console.log(res.data);
-      setMessages([...messages, res.data]);
-      setNewMessage('');
-      setMessageSent(true);
-      // try {
-      //     if(message.attachment.length>0){
-      //         await axios.post(config.API_SERVER+"upload/file", formData, {
-      //             headers: { 'Content-Type': 'multipart/form-data'}
-      //         })
-      //     }
-      // } catch (error) {
-      //     console.log(error.response.data.message);
-      // }
-      setSendIsLoading(false);
-      sendMessage(
-        message.sender,
-        receiverId.userId,
-        newMessage,
-        currentChat._id,
-        message.attachment,
-      );
-      setCommentFile(null);
+      if (success) {
+        setSendIsLoading(true);
+        const res = await axios.post(config.API_SERVER + 'messages', message);
+        console.log(res.data);
+        setMessages([...messages, res.data]);
+        setNewMessage('');
+        setMessageSent(true);
+        setSendIsLoading(false);
+        sendMessage(
+          message.sender,
+          receiverId.userId,
+          newMessage,
+          currentChat._id,
+          message.attachment,
+        );
+        setCommentFile(null);
+      }
     } catch (error) {
       setSendIsLoading(false);
       console.log(error);
@@ -270,8 +266,11 @@ const MessageScreen = () => {
   const handleClick = async () => {
     try {
       const images = await launchImageLibrary(options);
-      setCommentFile(images);
-      console.log(images);
+      if (images.didCancel) {
+        setCommentFile(null);
+      } else {
+        setCommentFile(images);
+      }
     } catch (error) {
       console.log(error);
     }

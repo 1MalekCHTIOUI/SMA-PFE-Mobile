@@ -9,13 +9,15 @@ import {
   StyleSheet,
   ActivityIndicator,
   RefreshControl,
+  Pressable,
+  TouchableOpacity,
 } from 'react-native';
 import config from '../../config';
 import {AppContext} from '../../Context/AppContext';
 import Post from '../../components/Post/Post';
 import Share from '../../components/Profile/Share';
 const DashboardScreen = () => {
-  const {onlineUsers, account} = useContext(AppContext);
+  const {onlineUsers, account, newPost, setNewPost} = useContext(AppContext);
   const [isLoading, setLoading] = useState(true);
   const [roles, setRoles] = useState([]);
   const [posts, setPosts] = useState([]);
@@ -77,11 +79,16 @@ const DashboardScreen = () => {
   const [refreshing, setRefreshing] = React.useState(false);
   const onRefresh = () => {
     setRefreshing(true);
-    getOnlineUsers();
+    setPosts([]);
     fetchPublicPosts();
 
     // changeColor('green');
     setRefreshing(false);
+  };
+  const handleRefresh = () => {
+    setPosts([]);
+    fetchPublicPosts();
+    setNewPost(null);
   };
   return (
     <ScrollView
@@ -126,6 +133,23 @@ const DashboardScreen = () => {
         </ScrollView>
       </View>
       <View>
+        {newPost && (
+          <TouchableOpacity onPress={handleRefresh}>
+            <View
+              style={{
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                width: '100%',
+              }}>
+              <Text>New post available</Text>
+              <Image
+                source={require('../../assets/icons/reload.png')}
+                style={{width: 30, height: 30}}
+              />
+            </View>
+          </TouchableOpacity>
+        )}
         {posts
           ?.filter(post => post.priority === false)
           .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))

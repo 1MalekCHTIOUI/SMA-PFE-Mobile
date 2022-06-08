@@ -34,9 +34,11 @@ const Post = ({post, index}) => {
     newLike,
     setNewLike,
     newUnlike,
+    setNewUnlike,
     newComment,
     emitNewComment,
     emitNewUnlike,
+    setNewComment,
   } = useContext(AppContext);
   const [like, setLike] = useState(post.likes.length);
   const [isLiked, setIsLiked] = useState(
@@ -116,11 +118,15 @@ const Post = ({post, index}) => {
   useEffect(() => {
     if (newLike && post._id === newLike.postId) {
       setLike(like + 1);
+      setNewLike(null);
     }
+  }, [newLike]);
+  useEffect(() => {
     if (newUnlike && post._id === newUnlike.postId) {
       setLike(like - 1);
+      setNewUnlike(null);
     }
-  }, [newLike, newUnlike]);
+  }, [newUnlike]);
   useEffect(() => {
     if (newComment && post._id === newComment.comment.postId) {
       setComments(prev => [...prev, newComment.comment]);
@@ -322,7 +328,9 @@ const Post = ({post, index}) => {
             </TouchableOpacity>
 
             <Text style={styles.postLikeCounter}>
-              {isLiked ? 'You and ' + `${like - 1} people like it` : ''}
+              {isLiked
+                ? 'You and ' + `${like > 0 && like - 1} people like it`
+                : ''}
               {!isLiked && `${like} people like it`}
             </Text>
           </View>
@@ -330,7 +338,6 @@ const Post = ({post, index}) => {
             style={styles.postBottomRight}
             onPress={() => {
               setShow(!show);
-              console.log('test');
             }}>
             <Text style={styles.postCommentText}>
               {comments?.length} comments

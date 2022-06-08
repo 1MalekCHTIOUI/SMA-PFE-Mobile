@@ -37,11 +37,11 @@ const ContextProvider = ({children}) => {
 
   useEffect(() => {
     // const LOGO = require('/public/uploads/profilePictures/'+account.user.profilePicture)
-    if (account.token) {
+    if (account.token !== '') {
       // setProfilePicture(LOGO)
       socket.emit('addUser', {userId: account.user._id, user: account.user});
     }
-  }, [account]);
+  }, [account.user]);
 
   useEffect(() => {
     setAppLoading(false);
@@ -182,6 +182,7 @@ const ContextProvider = ({children}) => {
               text: data.text,
               createdAt: Date.now(),
               currentChat: data.currentChat,
+              attachment: data.attachement,
             });
 
             setNotificationsCount(notificationsCount + 1);
@@ -302,7 +303,7 @@ const ContextProvider = ({children}) => {
     socket.on('newComment', data => {
       if (account.user._id !== data.senderId) {
         setNewComment({comment: data.comment});
-        openNotification('New comment', data.comment.content, 'notif');
+        // openNotification('New comment', data.comment.content, 'notif');
         setArrivalNotification({
           title: 'New Comment',
           sender: data.senderId,
@@ -332,6 +333,22 @@ const ContextProvider = ({children}) => {
       console.log(error);
     }
   };
+  const emitNewComment = async (senderId, receiverId, comment) => {
+    // sendNotification(account.user._id, m._id, `You have been removed from the group ${res.data.name}!`);
+    try {
+      socket.emit('newComment', {
+        senderId,
+        receiverId: receiverId,
+        comment: comment,
+      });
+      // saveNotificationToDB({
+      //     actor: account.user._id,
+      //     content: `${u.data.first_name} ${u.data.last_name} uploaded a new ${priority ? 'announcement' : 'post'}!`
+      // });
+    } catch (error) {
+      console.log(error);
+    }
+  };
   const emitNewUnlike = async (senderId, receiverId, postId) => {
     // sendNotification(account.user._id, m._id, `You have been removed from the group ${res.data.name}!`);
     try {
@@ -352,6 +369,10 @@ const ContextProvider = ({children}) => {
         senderId,
         receiverId: receiverId,
         postId: postId,
+        content: `${account.user.first_name} ${account.user.last_name} liked your post!`,
+      });
+      saveNotificationToDB({
+        actor: senderId,
         content: `${account.user.first_name} ${account.user.last_name} liked your post!`,
       });
     } catch (error) {
@@ -646,6 +667,7 @@ const ContextProvider = ({children}) => {
         newComment,
         setNewComment,
         setNotificationsCount,
+        emitNewComment,
         setMessageSent,
         setIsChanged,
         handleCallButton,

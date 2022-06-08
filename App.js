@@ -16,7 +16,7 @@ import Dashboard from './src/screens/Dashboard';
 import {store, persister} from './src/redux/store';
 import Routes from './src/Routes/Routes';
 import {ContextProvider} from './src/Context/AppContext';
-
+import {SafeAreaProvider} from 'react-native-safe-area-context';
 const App = () => {
   if (!__DEV__) {
     console.log = () => null;
@@ -24,9 +24,11 @@ const App = () => {
   return (
     <Provider store={store}>
       <PersistGate loading={null} persistor={persister}>
-        <ContextProvider>
-          <Routes />
-        </ContextProvider>
+        <SafeAreaProvider>
+          <ContextProvider>
+            <Routes />
+          </ContextProvider>
+        </SafeAreaProvider>
       </PersistGate>
     </Provider>
   );
