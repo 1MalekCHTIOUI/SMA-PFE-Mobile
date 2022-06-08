@@ -27,7 +27,6 @@ const Comment = ({comment}) => {
         const fetchUser = await axios.get(
           config.API_SERVER + 'user/users/' + comment.uploadedBy.userId,
         );
-        console.log(fetchUser.data);
         setUser(fetchUser.data);
         setLoading(false);
       } catch (error) {

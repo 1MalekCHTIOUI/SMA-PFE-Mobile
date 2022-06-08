@@ -45,7 +45,6 @@ const MessageScreen = () => {
   const [sendIsLoading, setSendIsLoading] = useState(false);
 
   useEffect(() => {
-    console.log(arrivalMessage);
     if (
       arrivalMessage &&
       currentChat?.members.some(u => u.userId === arrivalMessage.sender) &&
@@ -149,7 +148,6 @@ const MessageScreen = () => {
     scrollRef.current?.scrollToEnd({animated: 'true'});
   }, [messages]);
   const readMessages = async () => {
-    console.log('Setting as read');
     messages?.map(async m => {
       try {
         if (m?.read[account.user._id] === false) {
@@ -229,7 +227,6 @@ const MessageScreen = () => {
       if (success) {
         setSendIsLoading(true);
         const res = await axios.post(config.API_SERVER + 'messages', message);
-        console.log(res.data);
         setMessages([...messages, res.data]);
         setNewMessage('');
         setMessageSent(true);

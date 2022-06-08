@@ -69,7 +69,6 @@ const Share = ({user, setPosts}) => {
 
   const handleClick = async type => {
     try {
-      console.log(type);
       const images = await launchImageLibrary(
         type === 'video' ? options2 : options,
       );
@@ -106,7 +105,6 @@ const Share = ({user, setPosts}) => {
       post.content = content;
     }
     if (postFile !== null) {
-      console.log(postFile);
       if (postFile.assets[0].type.includes('video/mp4')) {
         const name = postFile.assets[0].fileName + '.mp4';
         formData.append('file', {
@@ -137,9 +135,8 @@ const Share = ({user, setPosts}) => {
           },
         ];
       }
-      console.log(post);
+
       try {
-        console.log(post);
         const res = await axios.post(config.API_SERVER + 'posts', post);
         if (res.data.privacy === false)
           emitNewPost(account.user._id, post.priority);

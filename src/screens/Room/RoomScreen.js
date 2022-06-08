@@ -64,7 +64,6 @@ const RoomScreen = ({setCurrentChat}) => {
       const res = await axios.get(
         config.API_SERVER + 'rooms/' + account.user._id,
       );
-      console.log(res.data);
       setGroups(res.data.filter(g => g.type !== 'PRIVATE'));
       setLoading(false);
     } catch (error) {
