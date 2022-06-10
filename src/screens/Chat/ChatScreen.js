@@ -58,24 +58,23 @@ const ChatScreen = () => {
       console.log(error);
     }
   };
-
-  useEffect(() => {
-    async function getRooms() {
-      try {
-        const res = await axios.get(
-          config.API_SERVER + 'rooms/' + account.user._id,
-        );
-        console.log(res.data);
-        setRooms(res.data);
-      } catch (error) {
-        console.log(error);
-      }
+  async function getRooms() {
+    try {
+      const res = await axios.get(
+        config.API_SERVER + 'rooms/' + account.user._id,
+      );
+      console.log(res.data);
+      setRooms(res.data);
+    } catch (error) {
+      console.log(error);
     }
+  }
+  useEffect(() => {
     getRooms();
     setMessageSent(false);
   }, [account, arrivalMessage, messageSent]);
   useEffect(() => {
-    setPrivateRooms([]);
+    // setPrivateRooms([]);
     getPrivateRooms();
   }, [arrivalMessage]);
   useEffect(() => {
@@ -131,18 +130,35 @@ const ChatScreen = () => {
 
   useEffect(() => {
     getPrivateRooms();
+
     // getLastRoomMessage();
   }, []);
   useEffect(() => {
     getPrivateRooms();
+    getUnreadRoomMessages();
     // getLastRoomMessage();
   }, [rooms]);
-  //   useEffect(() => {
-  //     if (messageSent) {
-  // getRooms()
-  //     }
-  //   }, [messageSent]);
-
+  useEffect(() => {
+    console.log('roomCounTTTTTTTTTTTTTTTTTTTTt');
+    console.log(roomCount);
+  }, [roomCount]);
+  const [roomCount, setRoomCount] = useState([]);
+  const getUnreadRoomMessages = async () => {
+    rooms?.map(async room => {
+      try {
+        let cp = 0;
+        const messages = await axios.get(
+          config.API_SERVER + 'messages/' + room._id,
+        );
+        for (let i = 0; i < messages.data.length; i++) {
+          cp++;
+        }
+        setRoomCount(prev => [...prev, {room: room._id, count: cp}]);
+      } catch (err) {
+        console.log(err);
+      }
+    });
+  };
   const [privateRooms, setPrivateRooms] = useState([]);
   const [privateRoomsLoading, setPrivateRoomsLoading] = useState(false);
   const getPrivateRooms = () => {
@@ -167,6 +183,7 @@ const ChatScreen = () => {
                   const t = await axios.get(
                     config.API_SERVER + 'messages/lastMessage/' + item._id,
                   );
+
                   setPrivateRooms(prev => [
                     ...prev,
                     {
@@ -203,7 +220,6 @@ const ChatScreen = () => {
             const t = await axios.get(
               config.API_SERVER + 'messages/lastMessage/' + item._id,
             );
-            console.log(t.data);
             setPrivateRooms(prev => [
               ...prev,
               {
@@ -224,6 +240,8 @@ const ChatScreen = () => {
   useEffect(() => {
     if (isChanged) {
       setPrivateRooms([]);
+      setRooms([]);
+      getRooms();
       getPrivateRooms();
       setIsChanged(false);
     }
@@ -289,119 +307,119 @@ const ChatScreen = () => {
   // }
 
   const PrivateRooms = () => {
-    return privateRooms?.map((item, index) => (
-      <>
-        <View
-          key={index}
-          style={{
-            width: '94%',
-            alignSelf: 'center',
-            backgroundColor: 'rgba(0,0,0,0.2)',
-            height: 1,
-            marginTop: 5,
-          }}
-        />
+    return privateRooms?.map((item, index) => {
+      return (
+        <>
+          <View
+            key={index}
+            style={{
+              width: '94%',
+              alignSelf: 'center',
+              backgroundColor: 'rgba(0,0,0,0.2)',
+              height: 1,
+              marginTop: 5,
+            }}
+          />
 
-        {item.room.type === 'PRIVATE' && (
-          <TouchableOpacity
-            style={styles.convContainer}
-            onPress={() => userHasRoom(item.user)}>
-            <Image
-              style={styles.convImage}
-              resizeMode="contain"
-              source={
-                item.user.profilePicture
-                  ? {
-                      uri: config.CONTENT + item.user.profilePicture,
+          {item.room.type === 'PRIVATE' && (
+            <TouchableOpacity
+              style={styles.convContainer}
+              onPress={() => userHasRoom(item.user)}>
+              <Image
+                style={styles.convImage}
+                resizeMode="contain"
+                source={
+                  item.user.profilePicture
+                    ? {
+                        uri: config.CONTENT + item.user.profilePicture,
+                      }
+                    : require('../../assets/images/user.png')
+                }
+              />
+              <SafeAreaView style={styles.convMiddleSection}>
+                <Text
+                  style={{
+                    fontFamily: 'Montserrat-Bold',
+                    color: 'black',
+                    fontSize: 15,
+                  }}>
+                  {item.user.first_name + ' ' + item.user.last_name}
+                </Text>
+                <Text
+                  style={{
+                    fontFamily: 'Montserrat-Regular',
+                    color: 'rgba(0,0,0,0.6)',
+                    paddingTop: 5,
+                  }}>
+                  {item.lastMessage?.text !== '' && item.lastMessage?.text}
+
+                  {item.lastMessage?.attachment?.length > 0 &&
+                    item.user.first_name + ' has sent an attachment!'}
+
+                  {!item.lastMessage && 'No messages'}
+                </Text>
+              </SafeAreaView>
+              <SafeAreaView style={styles.convEndSection}>
+                <Text
+                  style={{fontFamily: 'Montserrat-Regular', color: 'black'}}>
+                  {item.lastMessage?.createdAt
+                    ? format(item.lastMessage?.createdAt)
+                    : '---'}
+                </Text>
+                <Text style={styles.convMessageCount}>0</Text>
+              </SafeAreaView>
+            </TouchableOpacity>
+          )}
+          {item.type === 'PUBLIC' && (
+            <TouchableOpacity
+              style={styles.convContainer}
+              onPress={() => setCurrentChat(item.group)}>
+              <Image
+                style={styles.convImage}
+                source={require('../../assets/images/group.png')}
+                resizeMode="contain"
+              />
+
+              <SafeAreaView style={styles.convMiddleSection}>
+                <Text
+                  style={{
+                    fontFamily: 'Montserrat-Bold',
+                    color: 'black',
+                    fontSize: 15,
+                  }}>
+                  {item.room.name}
+                </Text>
+                <Text
+                  style={{
+                    fontFamily: 'Montserrat-Regular',
+                    color: 'rgba(0,0,0,0.6)',
+                    paddingTop: 5,
+                  }}>
+                  {item.lastMessage?.text
+                    ? item.lastMessage?.text
+                    : 'No messages'}
+                </Text>
+              </SafeAreaView>
+              <SafeAreaView style={styles.convEndSection}>
+                <Text
+                  style={{fontFamily: 'Montserrat-Regular', color: 'black'}}>
+                  {item.lastMessage?.createdAt
+                    ? format(item.lastMessage?.createdAt)
+                    : null}
+                </Text>
+                <Text style={styles.convMessageCount}>
+                  {roomCount?.map(cc => {
+                    if (cc.room == item._id) {
+                      return cc.count;
                     }
-                  : require('../../assets/images/user.png')
-              }
-            />
-            <SafeAreaView style={styles.convMiddleSection}>
-              <Text
-                style={{
-                  fontFamily: 'Montserrat-Bold',
-                  color: 'black',
-                  fontSize: 15,
-                }}>
-                {item.user.first_name + ' ' + item.user.last_name}
-              </Text>
-              <Text
-                style={{
-                  fontFamily: 'Montserrat-Regular',
-                  color: 'rgba(0,0,0,0.6)',
-                  paddingTop: 5,
-                }}>
-                {item.lastMessage?.text !== '' && item.lastMessage?.text}
-
-                {item.lastMessage?.attachment?.length > 0 &&
-                  item.user.first_name + ' has sent an attachment!'}
-
-                {!item.lastMessage && 'No messages'}
-              </Text>
-            </SafeAreaView>
-            <SafeAreaView style={styles.convEndSection}>
-              <Text style={{fontFamily: 'Montserrat-Regular', color: 'black'}}>
-                {item.lastMessage?.createdAt
-                  ? format(item.lastMessage?.createdAt)
-                  : '---'}
-              </Text>
-              <Text style={styles.convMessageCount}>
-                {item.user._id === unreadMessages.receiver
-                  ? unreadMessages.count
-                  : 0}
-              </Text>
-            </SafeAreaView>
-          </TouchableOpacity>
-        )}
-        {item.type === 'PUBLIC' && (
-          <TouchableOpacity
-            style={styles.convContainer}
-            onPress={() => setCurrentChat(item.group)}>
-            <Image
-              style={styles.convImage}
-              source={require('../../assets/images/group.png')}
-              resizeMode="contain"
-            />
-
-            <SafeAreaView style={styles.convMiddleSection}>
-              <Text
-                style={{
-                  fontFamily: 'Montserrat-Bold',
-                  color: 'black',
-                  fontSize: 15,
-                }}>
-                {item.room.name}
-              </Text>
-              <Text
-                style={{
-                  fontFamily: 'Montserrat-Regular',
-                  color: 'rgba(0,0,0,0.6)',
-                  paddingTop: 5,
-                }}>
-                {item.lastMessage?.text
-                  ? item.lastMessage?.text
-                  : 'No messages'}
-              </Text>
-            </SafeAreaView>
-            <SafeAreaView style={styles.convEndSection}>
-              <Text style={{fontFamily: 'Montserrat-Regular', color: 'black'}}>
-                {item.lastMessage?.createdAt
-                  ? format(item.lastMessage?.createdAt)
-                  : null}
-              </Text>
-              {/* <Text style={styles.convMessageCount}>
-                {item.room.members.some(
-                  u => u.userId === item.lastMessage.receiver,
-                )
-                  ? unreadMessages.count
-                  : 0}
-              </Text> */}
-            </SafeAreaView>
-          </TouchableOpacity>
-        )}
-      </>
-    ));
+                  })}
+                </Text>
+              </SafeAreaView>
+            </TouchableOpacity>
+          )}
+        </>
+      );
+    });
   };
   const handleCreate = () => {
     console.log('create');

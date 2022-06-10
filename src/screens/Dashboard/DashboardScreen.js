@@ -117,9 +117,10 @@ const DashboardScreen = () => {
       <View>
         <Share user={account.user} setPosts={setPosts} />
       </View>
-      {postsLoading && refreshing && (
-        <ActivityIndicator animating={postsLoading} size="large" />
-      )}
+      {postsLoading ||
+        (refreshing && (
+          <ActivityIndicator animating={postsLoading} size="large" />
+        ))}
       <View style={styles.ann}>
         <ScrollView horizontal={true}>
           {posts
