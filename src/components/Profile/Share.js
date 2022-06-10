@@ -138,7 +138,7 @@ const Share = ({user, setPosts}) => {
 
       try {
         const res = await axios.post(config.API_SERVER + 'posts', post);
-        if (res.data.privacy === false)
+        if (res.data.visibility === true)
           emitNewPost(account.user._id, post.priority);
         setPosts(prev => [...prev, res.data]);
         setPosting(false);

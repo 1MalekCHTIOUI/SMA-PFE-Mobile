@@ -7,6 +7,7 @@ import {
   ActivityIndicator,
   ScrollView,
   TouchableOpacity,
+  RefreshControl,
 } from 'react-native';
 import {useNavigation} from '@react-navigation/native';
 import CustomButton from '../../components/CustomButton';
@@ -54,6 +55,12 @@ const NotificationScreen = () => {
       console.log(error);
     }
   };
+  const [refreshing, setRefreshing] = useState(false);
+  const refreshNotifs = () => {
+    setRefreshing(true);
+    getNotifications();
+    setRefreshing(false);
+  };
   return (
     <View style={styles.container}>
       <ActivityIndicator animating={loading} />
@@ -75,7 +82,10 @@ const NotificationScreen = () => {
           />
         )}
       </View>
-      <ScrollView>
+      <ScrollView
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={refreshNotifs} />
+        }>
         {notifications.length > 0 &&
           notifications
             ?.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))

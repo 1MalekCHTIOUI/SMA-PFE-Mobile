@@ -12,6 +12,7 @@ import {
   Modal,
   Alert,
   TextInput,
+  RefreshControl,
 } from 'react-native';
 import {useSelector, useDispatch} from 'react-redux';
 import CustomButton from '../../components/CustomButton';
@@ -70,9 +71,32 @@ const ChatScreen = () => {
     }
   }
   useEffect(() => {
+    setRooms([]);
+
     getRooms();
+    setPrivateRooms([]);
+
+    getPrivateRooms();
     setMessageSent(false);
-  }, [account, arrivalMessage, messageSent]);
+  }, [account, arrivalMessage]);
+  useEffect(() => {
+    if (messageSent) {
+      setRooms([]);
+      getRooms();
+      setPrivateRooms([]);
+      getPrivateRooms();
+      setMessageSent(false);
+    }
+  }, [messageSent]);
+  const [refreshing, setRefreshing] = useState(false);
+  const refreshChat = () => {
+    setRefreshing(true);
+    setRooms([]);
+    getRooms();
+    setPrivateRooms([]);
+    getPrivateRooms();
+    setRefreshing(false);
+  };
   useEffect(() => {
     // setPrivateRooms([]);
     getPrivateRooms();
@@ -560,7 +584,12 @@ const ChatScreen = () => {
             </View>
           </Modal>
         </View>
-        <ScrollView>{PrivateRooms()}</ScrollView>
+        <ScrollView
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={refreshChat} />
+          }>
+          {PrivateRooms()}
+        </ScrollView>
       </View>
     </View>
   );
