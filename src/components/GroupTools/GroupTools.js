@@ -61,21 +61,30 @@ const GroupTools = ({group}) => {
         config.API_SERVER + 'rooms/room/' + group._id,
       );
       members.data.members?.map(async m => {
-        try {
+        if (account.user._id !== m.userId) {
           if (
-            account.user._id !== m.userId &&
+            groupMembers.length > 0 &&
             groupMembers.some(u => u._id !== m.userId)
           ) {
-            const member = await axios.get(
-              config.API_SERVER + 'user/users/' + m,
-            );
-
-            setGroupMembers(
-              prev => prev._id !== member.data._id && [...prev, member.data],
-            );
+            try {
+              const member = await axios.get(
+                config.API_SERVER + 'user/users/' + m.userId,
+              );
+              console.log(member.data);
+              setGroupMembers(prev => [...prev, member.data]);
+            } catch (e) {
+              console.log(e);
+            }
+          } else if (groupMembers.length === 0) {
+            try {
+              const member = await axios.get(
+                config.API_SERVER + 'user/users/' + m.userId,
+              );
+              setGroupMembers([member.data]);
+            } catch (error) {
+              console.log(e);
+            }
           }
-        } catch (e) {
-          console.log(e);
         }
       });
     } catch (error) {
@@ -87,14 +96,14 @@ const GroupTools = ({group}) => {
     getGroupMembers();
     setType('add');
     setOpenMenu(true);
+    setStatus(0);
   };
 
   const removeMember = () => {
     getGroupMembers();
     setType('remove');
     setOpenMenu(true);
-    setStatus(1);
-    console.log(users);
+    setStatus(0);
     // setGroupMembers(groupMembers.filter(m => selectedUser.includes(m._id)));
   };
   const handleExitGroup = () => {
@@ -165,8 +174,8 @@ const GroupTools = ({group}) => {
   };
   const handleConfirm = () => {
     if (selectedUser && type === 'add') {
-      submitAddMember(group, selectedUser);
-      setCurrentChat(null);
+      submitAddMember(group, [selectedUser]);
+      setStatus(1);
       getGroupMembers();
     }
     if (selectedUser && type === 'remove') {
@@ -184,8 +193,9 @@ const GroupTools = ({group}) => {
             text: 'OK',
             onPress: () => {
               if (selectedUser) {
-                submitRemoveMember(group, selectedUser);
+                submitRemoveMember(group, [selectedUser]);
                 getGroupMembers();
+                setStatus(1);
               }
             },
           },
@@ -251,6 +261,7 @@ const GroupTools = ({group}) => {
         visible={openMenu}
         onRequestClose={() => {
           setOpenMenu(false);
+          setStatus(0);
         }}>
         <View style={styles.overlay}>
           <View style={styles.modalContent}>
@@ -258,6 +269,12 @@ const GroupTools = ({group}) => {
               Choose user to {type === 'add' && 'add'}{' '}
               {type === 'remove' && 'remove'}
             </Text>
+            {selectedUser && (
+              <Text style={{textAlign: 'center', color: 'black'}}>
+                {selectedUser?.first_name} {selectedUser?.last_name}
+              </Text>
+            )}
+
             <Text style={styles.headerText}>
               {status === 1 &&
                 type === 'remove' &&
@@ -267,9 +284,11 @@ const GroupTools = ({group}) => {
             <Picker
               style={styles.picker}
               selectedValue={selectedUser}
-              onValueChange={(itemValue, itemIndex) =>
-                setSelectedUser(itemValue)
-              }>
+              onValueChange={(itemValue, itemIndex) => {
+                if (!itemValue) return;
+                setSelectedUser(itemValue);
+              }}>
+              <Picker.Item label="Select a value..." value="" />
               {type === 'add' &&
                 users
                   ?.filter(
@@ -370,7 +389,7 @@ const styles = StyleSheet.create({
     height: 50,
     width: '70%',
     backgroundColor: 'white',
-    color: 'white',
+    color: 'black',
     textAlign: 'center',
     borderRadius: 10,
   },

@@ -8,7 +8,7 @@ import {io} from 'socket.io-client';
 // import {uuid} from 'uuidv4';
 import {navigate, navigationRef} from './navRef';
 // import {useNavigation} from '@react-navigation/native';
-
+import moment from 'moment';
 const AppContext = createContext();
 
 const ContextProvider = ({children}) => {
@@ -174,9 +174,9 @@ const ContextProvider = ({children}) => {
           });
         } else {
           try {
-            const res = await axios.get(
-              config.API_SERVER + 'user/users/' + data.senderId,
-            );
+            // const res = await axios.get(
+            //   config.API_SERVER + 'user/users/' + data.senderId,
+            // );
             setArrivalMessage({
               sender: data.senderId,
               text: data.text,
@@ -218,9 +218,9 @@ const ContextProvider = ({children}) => {
     socket.on('getNotification', async data => {
       console.log('got notif');
       try {
-        const res = await axios.get(
-          config.API_SERVER + 'user/users/' + data.senderId,
-        );
+        // const res = await axios.get(
+        //   config.API_SERVER + 'user/users/' + data.senderId,
+        // );
         // openNotification('Group', {sender: `${res.data.first_name} ${res.data.last_name}`, text: data.content}, 'notif')
         setArrivalNotification({
           title: 'Group',
@@ -245,21 +245,6 @@ const ContextProvider = ({children}) => {
       setIsReceivingCall(true);
     });
 
-    socket.on('callAccepted', (acceptName, status) => {
-      setCallData(prev => ({...prev, receiver: acceptName.acceptName}));
-      socket.on('getRoomID', data => setROOM_ID(data));
-      setIsReceivingCall(false);
-      setCallAccepted(true);
-      navigate('Videos');
-      console.log(acceptName + ' CALL ACCEPTED NAVIGATEEE');
-    });
-
-    socket.on('callDeclined', data => {
-      console.log('call declined');
-      setIsReceivingCall(false);
-      setCallDeclined(true);
-      setDeclineInfo(data.msg);
-    });
     socket.on('newPost', data => {
       if (account.user._id !== data.senderId) {
         setNewPost(data.content);
@@ -447,7 +432,7 @@ const ContextProvider = ({children}) => {
     try {
       addedMembers?.map(async m => {
         try {
-          const res = await axios.put(
+          await axios.put(
             config.API_SERVER + 'rooms/addNewGroupMember/' + currentChat._id,
             {
               members: {
@@ -460,12 +445,12 @@ const ContextProvider = ({children}) => {
           socket.emit('sendNotification', {
             senderId: account.user._id,
             receiverId: m._id,
-            content: `You have been added to the group ${res.data.name}!`,
+            content: `You have been added to the group ${currentChat.name}!`,
           });
           await sendNotification(
             account.user._id,
             m._id,
-            `You have been added to the group ${res.data.name}!`,
+            `You have been added to the group ${currentChat.name}!`,
           );
           socket.emit('addToGroup', {currentChat, addedUser: m._id});
           try {
@@ -507,7 +492,7 @@ const ContextProvider = ({children}) => {
             console.log(e);
           }
         } catch (e) {
-          console.log(e.response.data.message);
+          console.log(e.message);
         }
       });
     } catch (error) {

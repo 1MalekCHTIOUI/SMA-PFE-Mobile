@@ -162,10 +162,7 @@ const ChatScreen = () => {
     getUnreadRoomMessages();
     // getLastRoomMessage();
   }, [rooms]);
-  useEffect(() => {
-    console.log('roomCounTTTTTTTTTTTTTTTTTTTTt');
-    console.log(roomCount);
-  }, [roomCount]);
+
   const [roomCount, setRoomCount] = useState([]);
   const getUnreadRoomMessages = async () => {
     rooms?.map(async room => {
@@ -397,7 +394,7 @@ const ChatScreen = () => {
           {item.type === 'PUBLIC' && (
             <TouchableOpacity
               style={styles.convContainer}
-              onPress={() => setCurrentChat(item.group)}>
+              onPress={() => setCurrentChat(item.room)}>
               <Image
                 style={styles.convImage}
                 source={require('../../assets/images/group.png')}
