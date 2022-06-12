@@ -4,18 +4,19 @@ import {
   Text,
   StyleSheet,
   Pressable,
+  TouchableOpacity,
   ActivityIndicator,
 } from 'react-native';
 
 const CustomButton = ({onPress, text, posting = false}) => {
   return (
-    <Pressable onPress={onPress} style={styles.container}>
+    <TouchableOpacity onPress={onPress} style={styles.container}>
       {posting ? (
         <ActivityIndicator />
       ) : (
         <Text style={styles.text}>{text}</Text>
       )}
-    </Pressable>
+    </TouchableOpacity>
   );
 };
 

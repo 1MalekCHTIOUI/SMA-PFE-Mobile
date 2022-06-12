@@ -27,6 +27,7 @@ import {format} from 'timeago.js';
 import {Picker} from '@react-native-picker/picker';
 import CustomInput from '../../components/CustomInput';
 import moment from 'moment';
+import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
 const ChatScreen = () => {
   const [rooms, setRooms] = useState([]);
   const navigation = useNavigation();
@@ -350,7 +351,7 @@ const ChatScreen = () => {
                 style={styles.convImage}
                 resizeMode="contain"
                 source={
-                  item.user.profilePicture
+                  item.user?.profilePicture
                     ? {
                         uri: config.CONTENT + item.user.profilePicture,
                       }
@@ -364,7 +365,7 @@ const ChatScreen = () => {
                     color: 'black',
                     fontSize: 15,
                   }}>
-                  {item.user.first_name + ' ' + item.user.last_name}
+                  {item.user?.first_name + ' ' + item.user?.last_name}
                 </Text>
                 <Text
                   style={{
@@ -375,7 +376,7 @@ const ChatScreen = () => {
                   {item.lastMessage?.text !== '' && item.lastMessage?.text}
 
                   {item.lastMessage?.attachment?.length > 0 &&
-                    item.user.first_name + ' has sent an attachment!'}
+                    item.user?.first_name + ' has sent an attachment!'}
 
                   {!item.lastMessage && 'No messages'}
                 </Text>
@@ -387,7 +388,7 @@ const ChatScreen = () => {
                     ? format(item.lastMessage?.createdAt)
                     : '---'}
                 </Text>
-                <Text style={styles.convMessageCount}>0</Text>
+                {/* <Text style={styles.convMessageCount}>0</Text> */}
               </SafeAreaView>
             </TouchableOpacity>
           )}
@@ -428,13 +429,13 @@ const ChatScreen = () => {
                     ? format(item.lastMessage?.createdAt)
                     : null}
                 </Text>
-                <Text style={styles.convMessageCount}>
+                {/* <Text style={styles.convMessageCount}>
                   {roomCount?.map(cc => {
                     if (cc.room == item._id) {
                       return cc.count;
                     }
                   })}
-                </Text>
+                </Text> */}
               </SafeAreaView>
             </TouchableOpacity>
           )}
@@ -522,10 +523,11 @@ const ChatScreen = () => {
             animationType="slide"
             transparent={true}
             visible={show}
+            style={{height: 80}}
             onRequestClose={() => {
               setShow(false);
             }}>
-            <View style={styles.overlay}>
+            <KeyboardAwareScrollView style={styles.overlay}>
               <View style={styles.modalContent}>
                 <ScrollView style={{height: 10}}>
                   {selectedUsers?.map(item => (
@@ -534,7 +536,6 @@ const ChatScreen = () => {
                     </Text>
                   ))}
                 </ScrollView>
-
                 <View>
                   <TextInput
                     style={styles.input}
@@ -578,7 +579,7 @@ const ChatScreen = () => {
                   <Text style={{color: 'white'}}>Close</Text>
                 </Pressable>
               </View>
-            </View>
+            </KeyboardAwareScrollView>
           </Modal>
         </View>
         <ScrollView
@@ -624,6 +625,7 @@ const styles = StyleSheet.create({
   },
   input: {
     backgroundColor: 'white',
+    color: 'black',
     width: 275,
     margin: 10,
   },

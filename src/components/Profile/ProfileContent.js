@@ -28,7 +28,9 @@ const ProfileContent = ({user}) => {
   }, []);
   return (
     <View style={styles.content}>
-      <Share user={user} setPosts={setPosts} />
+      {user._id === account.user._id && (
+        <Share user={user} setPosts={setPosts} />
+      )}
       <View style={styles.postsWrapper}>
         {posts &&
           postsLoading === false &&
@@ -41,7 +43,7 @@ const ProfileContent = ({user}) => {
                 return <Post post={post} />;
               }
             })}
-        {posts.length === 0 && (
+        {posts.filter(p => p.priority === false).length === 0 && (
           <Text style={{fontSize: 20, color: 'black', textAlign: 'center'}}>
             No posts!
           </Text>

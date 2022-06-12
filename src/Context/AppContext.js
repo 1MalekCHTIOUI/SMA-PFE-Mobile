@@ -408,21 +408,31 @@ const ContextProvider = ({children}) => {
     attachement = [],
   ) => {
     try {
-      const user = await axios.get(
-        config.API_SERVER + 'user/users/' + senderId,
-      );
-      const text = newMessage
-        ? newMessage
-        : `${user.data.first_name} ${user.data.last_name} has sent an attachment!`;
-      sendMessageNotification(senderId, receiverId, text);
-      console.log(currentChat);
-      socket.emit('sendMessage', {
-        senderId: senderId,
-        receiverId,
-        text: text,
-        attachement,
-        currentChat,
-      });
+      if (senderId !== 'CHAT') {
+        const user = await axios.get(
+          config.API_SERVER + 'user/users/' + senderId,
+        );
+        const text = newMessage
+          ? newMessage
+          : `${user.data.first_name} ${user.data.last_name} has sent an attachment!`;
+        sendMessageNotification(senderId, receiverId, text);
+        socket.emit('sendMessage', {
+          senderId: senderId,
+          receiverId,
+          text: text,
+          attachement,
+          currentChat,
+        });
+      } else {
+        sendMessageNotification(senderId, receiverId, newMessage);
+        socket.emit('sendMessage', {
+          senderId: senderId,
+          receiverId,
+          text: newMessage,
+          attachement,
+          currentChat,
+        });
+      }
     } catch (e) {
       console.log(e);
     }
@@ -453,6 +463,13 @@ const ContextProvider = ({children}) => {
             `You have been added to the group ${currentChat.name}!`,
           );
           socket.emit('addToGroup', {currentChat, addedUser: m._id});
+          setCurrentChat(prev => ({
+            ...prev,
+            members: [
+              ...prev.members,
+              {userId: m._id, joinedIn: moment().toISOString(), leftIn: ''},
+            ],
+          }));
           try {
             const user = await axios.get(
               config.API_SERVER + 'user/users/' + m._id,
@@ -519,6 +536,10 @@ const ContextProvider = ({children}) => {
             content: `You have been removed from the group ${res.data.name}!`,
           });
           socket.emit('removeFromGroup', {currentChat, removedUser: m._id});
+          const members = currentChat.members.filter(u => {
+            return u.userId.includes(m._id) === false;
+          });
+          setCurrentChat(prev => ({...prev, members: members}));
           try {
             const user = await axios.get(
               config.API_SERVER + 'user/users/' + m._id,

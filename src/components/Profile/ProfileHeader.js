@@ -69,7 +69,7 @@ const ProfileHeader = ({user}) => {
           <Text style={styles.service}>
             Joined: {moment().format('DD/MM/YYYY', user.createdAt)}
           </Text>
-          {/* {user?.social?.linkedin !== '' && (
+          {user?.social?.linkedin !== '' && (
             <TouchableOpacity
               onPress={() => Linking.openURL(user?.social.linkedin)}
               style={{
@@ -110,7 +110,7 @@ const ProfileHeader = ({user}) => {
                 <Text style={styles.service}>{user?.social.facebook}</Text>
               </View>
             </TouchableOpacity>
-          )} */}
+          )}
           {user?.social?.github !== '' && (
             <TouchableOpacity
               onPress={() => Linking.openURL(user?.social.github)}

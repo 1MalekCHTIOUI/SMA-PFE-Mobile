@@ -128,7 +128,11 @@ const Post = ({post, index}) => {
     }
   }, [newUnlike]);
   useEffect(() => {
-    if (newComment && post._id === newComment.comment.postId) {
+    if (
+      newComment &&
+      post._id === newComment.comment.postId &&
+      post.userId !== account.user._id
+    ) {
       setComments(prev => [...prev, newComment.comment]);
     }
   }, [newComment]);

@@ -118,6 +118,7 @@ const GroupTools = ({group}) => {
         text: 'OK',
         onPress: () => {
           exitGroup(group, account.user);
+          getGroupMembers();
           navigation.navigate('Chats');
         },
       },
@@ -294,7 +295,7 @@ const GroupTools = ({group}) => {
                   ?.filter(
                     user =>
                       user._id !== account.user._id &&
-                      groupMembers.includes(user._id) === false,
+                      groupMembers.some(u => u._id !== user._id),
                   )
                   .map(item => {
                     // if (groupMembers.some(m => m._id !== item._id)) {
